@@ -40,7 +40,10 @@ public class Simulator
 		try
 		{
 			Stream<String> lines = Files.lines(Paths.get("input.txt"));
+			
 			instr = lines.skip(currentFilePointer).findFirst().get();
+			instr=instr.replaceAll("#", "");
+			instr=instr.replaceAll(",", "");
 			currentFilePointer++;
 			currentPC = currentPC + 4;
 			System.out.println("******************" + instr + "***********************");
