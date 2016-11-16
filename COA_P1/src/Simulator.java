@@ -32,6 +32,7 @@ public class Simulator
 	 * @return instruction
 	 * @throws IOException
 	 */
+	@SuppressWarnings("resource")
 	private static String getContent() throws IOException
 	{
 		String instr = "";
@@ -50,7 +51,11 @@ public class Simulator
 		return instr;
 	}
 
-	// Move Instruction to next stage using latches(temporary storage)
+	/**
+	 * This function moves the instruction to next stage using latches
+	 * @param cStage Current stage
+	 * @param pStage
+	 */
 	private static void moveInstruction(String cStage, String pStage)
 	{
 		if (stages.containsKey(cStage))
@@ -65,6 +70,12 @@ public class Simulator
 
 	// Read value from Register file if Register file contains key(R1, R2 ..
 	// etc)
+	
+	/**
+	 * Read value from Register file if Register file contains key(R0, R1 ..)
+	 * @param pair
+	 * @return value of register
+	 */
 	private static Integer readRegister(KeyValue<String, Integer> pair)
 	{
 		if (pair != null && registerFile.containsKey(pair.getKey()))
