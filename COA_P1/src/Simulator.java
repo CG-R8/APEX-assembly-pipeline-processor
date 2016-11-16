@@ -22,6 +22,7 @@ public class Simulator
 	static int specialRegister;
 	static boolean stopExecution;
 	static boolean isSourceValid;
+	static public KeyValue<String, Integer> forwardingReg;
 
 
 	/**
@@ -54,7 +55,13 @@ public class Simulator
 	/**
 	 * This function moves the instruction to next stage using latches
 	 * @param cStage Current stage
-	 * @param pStage
+	 * @param pStage past stage
+	 * <p>
+	 * Example moveInstruction(E,D) 
+	 * <p>
+	 * If stages contain E --> latches.put(E, stages.get(E));
+	 * <br>
+	 * If latches contain D -> stages.put(E, latches.get(D));
 	 */
 	private static void moveInstruction(String cStage, String pStage)
 	{
@@ -89,6 +96,7 @@ public class Simulator
 	 * @param instruction
 	 * @return instruction
 	 */
+
 	private static Instruction getSRCFromRegister(Instruction instruction)
 	{
 		KeyValue<String, Integer> src1 = instruction.getSrc1();
@@ -98,20 +106,19 @@ public class Simulator
 
 		if (src1 != null)
 		{
-			isSrc1Valid = checkFlowDependencies(src1, "E") && checkFlowDependencies(src1, "M")
-					&& checkFlowDependencies(src1, "A");
+			isSrc1Valid = checkFlowDependencies(src1, "E");
 			instruction.setSrc1(readRegister(src1));
 		}
 		if (src2 != null)
 		{
-			isSrc2Valid = checkFlowDependencies(src2, "E") && checkFlowDependencies(src2, "M")
-					&& checkFlowDependencies(src2, "A");
+			isSrc2Valid = checkFlowDependencies(src2, "E") ;
 			instruction.setSrc2(readRegister(src2));
 		}
 		if (instruction.getOperation().equals(TypesOfOperations.STORE))
 		{
-			isDestValid = checkFlowDependencies(destination, "E") && checkFlowDependencies(destination, "M")
-					&& checkFlowDependencies(destination, "A");
+			isDestValid = checkFlowDependencies(destination, "E");
+			//TODO we need forwarding from STORE
+				//	&& checkFlowDependencies(destination, "M")&& checkFlowDependencies(destination, "A");
 			instruction.setDestination(readRegister(destination));
 			isSourceValid = isSrc1Valid && isSrc2Valid && isDestValid;
 			return instruction;
@@ -248,6 +255,16 @@ public class Simulator
 
 	private static Instruction nothingtodo(Instruction instruction)
 	{
+		String controlFlowInstruction = TypesOfOperations.BNZ + "|" + TypesOfOperations.BZ + "|" + TypesOfOperations.JUMP + "|"
+				+ TypesOfOperations.BAL + "|" + TypesOfOperations.HALT;
+		if (!controlFlowInstruction.contains(instruction.getOperation()))
+		if (latches.containsKey("E"))
+		{
+		System.out.println(">>>>>>>Recent calculated value>>"+instruction.getDestination().getValue() );
+
+		forwardingReg = instruction.getDestination();
+		
+		}
 		return instruction;
 	}
 
@@ -265,10 +282,19 @@ public class Simulator
 		{
 			if (!latches.get("D").isNOP())
 			{
-				// Check if the instruction in Decode stage is Control flow
+				// Check if the instruction in Decode stage is not Control flow
 				// instruction
 				if (!controlFlowInstruction.contains(latches.get("D").getOperation()))
 				{
+					Instruction instructionEx = latches.get("D");
+					//TODO check the src 1 and src 2 with forwarding registers
+					if((instructionEx.getSrc1()!=null)
+							&&(instructionEx.getSrc1().getKey().equals(forwardingReg.getKey() )))
+						instructionEx.setSrc1(forwardingReg.getValue());
+					if((instructionEx.getSrc2()!=null)
+							&&(instructionEx.getSrc2().getKey().equals(forwardingReg.getKey() )))
+						instructionEx.setSrc2(forwardingReg.getValue());
+
 					latches.put("D", functionUnit.executeInstruction(latches.get("D")));
 				} else
 				// Here we have the branch instruction
@@ -294,9 +320,7 @@ public class Simulator
 					if (currentPC != pcCounter)
 					{
 						currentPC = pcCounter;
-						currentFilePointer = (currentPC - 4000) / 4; //// update
-																		//// file
-																		//// pointer
+						currentFilePointer = (currentPC - 4000) / 4; 
 						flushRegisterValues = true;
 					}
 				}
@@ -345,6 +369,7 @@ public class Simulator
 		}
 		if (stages.containsKey("W") && !stages.get("W").isNOP())
 		{
+			//Check instruction in W is one of the control flow instr or not and not STORE
 			if (!controlFlowInstruction.contains(stages.get("W").getOperation())
 					&& !stages.get("W").getOperation().equals(TypesOfOperations.STORE))
 			{
@@ -381,20 +406,22 @@ public class Simulator
 	// Simulate instructions for n cycle
 	private static void Simulate(int n) throws IOException
 	{
-		for (int i = 0; i < n; i++)
+		for (int i = 1; i < n; i++)
 		{
 			if (i>=99)
 			{
 				System.out.println("----Cycle 86 + ---");
 			}
+			System.out.println("----------------------------" + i + "-----------------------------");
 			fetchInstruction();
 			decodeInstruction();
 			executeInstruction();
 			ALU();
 			memory();
 			writeback();
-			System.out.println("----------------------------" + i + "-----------------------------");
 			Display();
+			System.out.println("---------------------------------------------------------");
+
 			if (stopExecution)
 				break;
 		}
@@ -464,6 +491,7 @@ public class Simulator
 			}
 		} catch (Exception ex)
 		{
+			ex.printStackTrace();
 			System.out.println(ex.getMessage());
 		} finally
 		{
