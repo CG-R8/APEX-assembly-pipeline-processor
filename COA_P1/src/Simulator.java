@@ -111,10 +111,19 @@ public class Simulator
 	// stage with Instruction's destination of Next stages)
 	private static boolean checkFlowDependencies(KeyValue<String, Integer> src, String stage)
 	{
-		return !(stages.containsKey(stage) && stages.get(stage).getOperation() != null
-				&& !stages.get(stage).getOperation().equals(TypesOfOperations.STORE)
-				&& stages.get(stage).getDestination() != null
-				&& stages.get(stage).getDestination().getKey().equals(src.getKey()));
+		try
+		{
+			return !(stages.containsKey(stage) && stages.get(stage).getOperation() != null
+					&& !stages.get(stage).getOperation().equals(TypesOfOperations.STORE)
+					&& stages.get(stage).getDestination() != null
+					&& stages.get(stage).getDestination().getKey().equals(src.getKey()));
+		} catch (Exception e)
+		{
+			System.err.println("Error while checking the flow dependancies");
+			e.printStackTrace();
+			System.exit(0);
+		}
+		return true;
 	}
 
 	// Perform memory operation in LOAD STORE operation(Store value in memory in
@@ -193,7 +202,14 @@ public class Simulator
 			{
 				// find the Fetch instruction and pass it to the
 				// getSRCFromRegister
-				latches.put("F", getSRCFromRegister(latches.get("F")));
+				try
+				{
+					latches.put("F", getSRCFromRegister(latches.get("F")));
+				} catch (Exception e)
+				{
+					System.err.println("Error while reading values from Registers in Decode function");
+					e.printStackTrace();
+				}
 				moveInstruction("D", "F");
 			}
 		} else
