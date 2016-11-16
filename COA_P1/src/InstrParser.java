@@ -14,6 +14,12 @@ public class InstrParser {
 	}
 
 	// Parse instruction and return Instruction Object to be passed into different stages
+	
+	/**
+	 * @param instr
+	 * @param pcCounter
+	 * @return
+	 */
 	public Instruction parseInstruction(String instr, int pcCounter){
 		Instruction instruction = null;
 		String [] instrArray = instr.split(" ");
@@ -35,7 +41,8 @@ public class InstrParser {
 				instruction = new Instruction(instrArray[0], 
 						new KeyValue<String, Integer>(instrArray[1], null), 
 						new KeyValue<String, Integer>(instrArray[2], null), 
-						null, Integer.parseInt(instrArray[3]), instr);
+						null,
+						Integer.parseInt(instrArray[3]), instr);
 			}
 			else{
 				instruction = new Instruction(instrArray[0], 

@@ -18,6 +18,14 @@ public class Instruction {
 		this.isNOP = true;
 	}
 
+	/**
+	 * @param operation
+	 * @param destination
+	 * @param src1
+	 * @param src2
+	 * @param literal
+	 * @param content
+	 */
 	public Instruction(String operation,
 			KeyValue<String, Integer> destination,
 			KeyValue<String, Integer> src1, KeyValue<String, Integer> src2,

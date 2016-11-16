@@ -116,9 +116,12 @@ public class Simulator
 		}
 		if (instruction.getOperation().equals(TypesOfOperations.STORE))
 		{
-			isDestValid = checkFlowDependencies(destination, "E");
+			//TODO I dont think there is any requirement to check store 's dependancy
+			//isDestValid = checkFlowDependencies(destination, "E");
 			//TODO we need forwarding from STORE
 				//	&& checkFlowDependencies(destination, "M")&& checkFlowDependencies(destination, "A");
+			
+			//TODO If this wont match, it means for STORE the register required is not yet in RegisterFile
 			instruction.setDestination(readRegister(destination));
 			isSourceValid = isSrc1Valid && isSrc2Valid && isDestValid;
 			return instruction;
@@ -409,7 +412,7 @@ public class Simulator
 	{
 		for (int i = 1; i < n; i++)
 		{
-			if (i>=99)
+			if (i>=74)
 			{
 				System.out.println("----Cycle 86 + ---");
 			}
