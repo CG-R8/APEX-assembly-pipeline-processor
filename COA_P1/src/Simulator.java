@@ -74,8 +74,13 @@ public class Simulator
 		return null;
 	}
 
-	// Check flow dependency and read sources from register file
-	// and in case of STORE read register value and store in Destination
+	/**
+	 * Check the flow dependencies for both sources of passed instruction with A E M "stages"
+	 * This method is used to set isSourceValid value
+	 * Special case for  STORE type instruction
+	 * @param instruction
+	 * @return instruction
+	 */
 	private static Instruction getSRCFromRegister(Instruction instruction)
 	{
 		KeyValue<String, Integer> src1 = instruction.getSrc1();
@@ -107,15 +112,29 @@ public class Simulator
 		return instruction;
 	}
 
-	// Check flow dependencies(Compare Instruction's source that is in Decode
-	// stage with Instruction's destination of Next stages)
+	/**
+	 * This function checks the flow dependencies by comparing the sources of 
+	 * instruction in Decode stage with destination of next instructions in "stage"
+	 * <p>
+	 * If instruction is not STORE
+	 * If destination of instruction is not NULL
+	 * If there is same Register in both instruction
+	 * 
+	 * @param src It is the hashmap Keyval which contain register name and its value
+	 * @param stage It is the string represent "F" or "D" or ....
+	 * @return True -if dependencies else false
+	 * 
+	 */
 	private static boolean checkFlowDependencies(KeyValue<String, Integer> src, String stage)
 	{
 		try
 		{
 			return !(stages.containsKey(stage) && stages.get(stage).getOperation() != null
+					//If instruction is not STORE
 					&& !stages.get(stage).getOperation().equals(TypesOfOperations.STORE)
+					//If destination of instruction is not NULL
 					&& stages.get(stage).getDestination() != null
+					//If there is same Register in both instruction
 					&& stages.get(stage).getDestination().getKey().equals(src.getKey()));
 		} catch (Exception e)
 		{
