@@ -26,8 +26,8 @@ public class Simulator
 
 	/**
 	 * 
-	 * Read the line store it in instr Incremetnt the current file pointer
-	 * incerement the PC
+	 * Read the line store it in instr Increment the current file pointer
+	 * Increment the PC
 	 * 
 	 * @return instruction
 	 * @throws IOException
@@ -185,7 +185,6 @@ public class Simulator
 
 	private static Instruction nothingtodo(Instruction instruction)
 	{
-		// TODO Auto-generated method stub
 		return instruction;
 	}
 
@@ -321,9 +320,12 @@ public class Simulator
 	{
 		for (int i = 0; i < n; i++)
 		{
+			if (i>=99)
+			{
+				System.out.println("----Cycle 86 + ---");
+			}
 			fetchInstruction();
 			decodeInstruction();
-
 			executeInstruction();
 			ALU();
 			memory();
@@ -390,7 +392,7 @@ public class Simulator
 						break;
 					case "S":
 						Initialize();
-						Simulate(Integer.parseInt("100"));
+						Simulate(Integer.parseInt("200"));
 						break;
 					case "D":
 						Display();
