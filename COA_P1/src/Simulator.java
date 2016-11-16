@@ -244,8 +244,9 @@ public class Simulator
 					System.err.println("Error while reading values from Registers in Decode function");
 					e.printStackTrace();
 				}
-				moveInstruction("D", "F");
+//				moveInstruction("D", "F");
 			}
+			moveInstruction("D", "F");
 		} else
 		{
 			latches.put("D", new Instruction());// Add NOP in latch for the next
