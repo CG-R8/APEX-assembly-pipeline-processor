@@ -68,9 +68,6 @@ public class Simulator
 		}
 	}
 
-	// Read value from Register file if Register file contains key(R1, R2 ..
-	// etc)
-	
 	/**
 	 * Read value from Register file if Register file contains key(R0, R1 ..)
 	 * @param pair
@@ -185,7 +182,6 @@ public class Simulator
 		latches.put("D", new Instruction());
 	}
 
-	// Fetch Stage - Read Instruction from Instruction file
 	/**
 	 * Fetch stage:
 	 * Check current instruction in Decode stage is present and is NOP?
@@ -224,6 +220,7 @@ public class Simulator
 
 	// Decode Stage - Read value from register file and store values in SRC1 and
 	// SRC2
+
 	private static void decodeInstruction()
 	{
 		if (isSourceValid)
