@@ -133,7 +133,11 @@ public class Simulator
 		return instruction;
 	}
 
-	// Flush register values(Fill Fetch and Decode stage with NOP instruction)
+	/**
+	 * Flushes the values of register and
+	 * Fill NOP in F and D of stage and latch
+	 * 
+	 */
 	private static void flushRegister()
 	{
 		stages.put("F", new Instruction());
@@ -143,7 +147,14 @@ public class Simulator
 	}
 
 	// Fetch Stage - Read Instruction from Instruction file
-	private static void fetchInstruction() throws IOException
+	/**
+	 * Fetch stage:
+	 * Check current instruction in Decode stage is present and is NOP?
+	 * then check the registers values and set {@isSourceValid} flag
+	 * 
+	 *  
+	 */
+	private static void fetchInstruction()
 	{
 		InstrParser parser = new InstrParser();
 		// Check if the current cycle have anything in decode stage and is it
@@ -154,12 +165,21 @@ public class Simulator
 		}
 		if (isSourceValid)
 		{
-			Instruction instruction = parser.parseInstruction(getContent(), currentPC);
+			Instruction instruction;
+			try
+			{
+				instruction = parser.parseInstruction(getContent(), currentPC);
+			
 			if (stages.containsKey("F"))
 			{
 				latches.put("F", stages.get("F"));
 			}
 			stages.put("F", instruction);
+			} catch (IOException e)
+			{
+				System.err.println("Got exception In fetch stage");
+				e.printStackTrace();
+			}
 		}
 	}
 
