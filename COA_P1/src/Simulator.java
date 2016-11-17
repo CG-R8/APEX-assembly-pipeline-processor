@@ -24,7 +24,6 @@ public class Simulator
 	static boolean isSourceValid;
 	static public KeyValue<String, Integer> forwardingReg;
 
-
 	/**
 	 * 
 	 * Read the line store it in instr Increment the current file pointer
@@ -40,10 +39,10 @@ public class Simulator
 		try
 		{
 			Stream<String> lines = Files.lines(Paths.get("input.txt"));
-			
+
 			instr = lines.skip(currentFilePointer).findFirst().get();
-			instr=instr.replaceAll("#", "");
-			instr=instr.replaceAll(",", "");
+			instr = instr.replaceAll("#", "");
+			instr = instr.replaceAll(",", "");
 			currentFilePointer++;
 			currentPC = currentPC + 4;
 			System.out.println("******************" + instr + "***********************");
@@ -57,14 +56,16 @@ public class Simulator
 
 	/**
 	 * This function moves the instruction to next stage using latches
-	 * @param cStage Current stage
-	 * @param pStage past stage
-	 * <p>
-	 * Example moveInstruction(E,D) 
-	 * <p>
-	 * If stages contain E --> latches.put(E, stages.get(E));
-	 * <br>
-	 * If latches contain D -> stages.put(E, latches.get(D));
+	 * 
+	 * @param cStage
+	 *            Current stage
+	 * @param pStage
+	 *            past stage
+	 *            <p>
+	 *            Example moveInstruction(E,D)
+	 *            <p>
+	 *            If stages contain E --> latches.put(E, stages.get(E)); <br>
+	 *            If latches contain D -> stages.put(E, latches.get(D));
 	 */
 	private static void moveInstruction(String cStage, String pStage)
 	{
@@ -80,6 +81,7 @@ public class Simulator
 
 	/**
 	 * Read value from Register file if Register file contains key(R0, R1 ..)
+	 * 
 	 * @param pair
 	 * @return value of register
 	 */
@@ -93,9 +95,10 @@ public class Simulator
 	}
 
 	/**
-	 * Check the flow dependencies for both sources of passed instruction with A E M "stages"
-	 * This method is used to set isSourceValid value
-	 * Special case for  STORE type instruction
+	 * Check the flow dependencies for both sources of passed instruction with A
+	 * E M "stages" This method is used to set isSourceValid value Special case
+	 * for STORE type instruction
+	 * 
 	 * @param instruction
 	 * @return instruction
 	 */
@@ -114,17 +117,20 @@ public class Simulator
 		}
 		if (src2 != null)
 		{
-			isSrc2Valid = checkFlowDependencies(src2, "E") ;
+			isSrc2Valid = checkFlowDependencies(src2, "E");
 			instruction.setSrc2(readRegister(src2));
 		}
 		if (instruction.getOperation().equals(TypesOfOperations.STORE))
 		{
-			//TODO I dont think there is any requirement to check store 's dependancy
-			//isDestValid = checkFlowDependencies(destination, "E");
-			//TODO we need forwarding from STORE
-				//	&& checkFlowDependencies(destination, "M")&& checkFlowDependencies(destination, "A");
-			
-			//TODO If this wont match, it means for STORE the register required is not yet in RegisterFile
+			// TODO I dont think there is any requirement to check store 's
+			// dependancy
+			// isDestValid = checkFlowDependencies(destination, "E");
+			// TODO we need forwarding from STORE
+			// && checkFlowDependencies(destination, "M")&&
+			// checkFlowDependencies(destination, "E2");
+
+			// TODO If this wont match, it means for STORE the register required
+			// is not yet in RegisterFile
 			instruction.setDestination(readRegister(destination));
 			isSourceValid = isSrc1Valid && isSrc2Valid && isDestValid;
 			return instruction;
@@ -134,15 +140,18 @@ public class Simulator
 	}
 
 	/**
-	 * This function checks the flow dependencies by comparing the sources of 
-	 * instruction in Decode stage with destination of next instructions in "stage"
+	 * This function checks the flow dependencies by comparing the sources of
+	 * instruction in Decode stage with destination of next instructions in
+	 * "stage"
 	 * <p>
-	 * If instruction is not STORE
-	 * If destination of instruction is not NULL
-	 * If there is same Register in both instruction
+	 * If instruction is not STORE If destination of instruction is not NULL If
+	 * there is same Register in both instruction
 	 * 
-	 * @param src It is the hashmap Keyval which contain register name and its value
-	 * @param stage It is the string represent "F" or "D" or ....
+	 * @param src
+	 *            It is the hashmap Keyval which contain register name and its
+	 *            value
+	 * @param stage
+	 *            It is the string represent "F" or "D" or ....
 	 * @return True -if dependencies else false
 	 * 
 	 */
@@ -151,11 +160,11 @@ public class Simulator
 		try
 		{
 			return !(stages.containsKey(stage) && stages.get(stage).getOperation() != null
-					//If instruction is not STORE
+			// If instruction is not STORE
 					&& !stages.get(stage).getOperation().equals(TypesOfOperations.STORE)
-					//If destination of instruction is not NULL
+					// If destination of instruction is not NULL
 					&& stages.get(stage).getDestination() != null
-					//If there is same Register in both instruction
+					// If there is same Register in both instruction
 					&& stages.get(stage).getDestination().getKey().equals(src.getKey()));
 		} catch (Exception e)
 		{
@@ -183,8 +192,7 @@ public class Simulator
 	}
 
 	/**
-	 * Flushes the values of register and
-	 * Fill NOP in F and D of stage and latch
+	 * Flushes the values of register and Fill NOP in F and D of stage and latch
 	 * 
 	 */
 	private static void flushRegister()
@@ -196,11 +204,10 @@ public class Simulator
 	}
 
 	/**
-	 * Fetch stage:
-	 * Check current instruction in Decode stage is present and is NOP?
-	 * then check the registers values and set {@isSourceValid} flag
+	 * Fetch stage: Check current instruction in Decode stage is present and is
+	 * NOP? then check the registers values and set {@isSourceValid} flag
 	 * 
-	 *  
+	 * 
 	 */
 	private static void fetchInstruction()
 	{
@@ -217,12 +224,12 @@ public class Simulator
 			try
 			{
 				instruction = parser.parseInstruction(getContent(), currentPC);
-			
-			if (stages.containsKey("F"))
-			{
-				latches.put("F", stages.get("F"));
-			}
-			stages.put("F", instruction);
+
+				if (stages.containsKey("F"))
+				{
+					latches.put("F", stages.get("F"));
+				}
+				stages.put("F", instruction);
 			} catch (IOException e)
 			{
 				System.err.println("Got exception In fetch stage");
@@ -250,7 +257,7 @@ public class Simulator
 					System.err.println("Error while reading values from Registers in Decode function");
 					e.printStackTrace();
 				}
-//				moveInstruction("D", "F");
+				// moveInstruction("D", "F");
 			}
 			moveInstruction("D", "F");
 		} else
@@ -260,18 +267,18 @@ public class Simulator
 		}
 	}
 
-	private static Instruction nothingtodo(Instruction instruction)
+	private static Instruction alu2Method(Instruction instruction)
 	{
-		String controlFlowInstruction = TypesOfOperations.BNZ + "|" + TypesOfOperations.BZ + "|" + TypesOfOperations.JUMP + "|"
-				+ TypesOfOperations.BAL + "|" + TypesOfOperations.HALT;
+		String controlFlowInstruction = TypesOfOperations.BNZ + "|" + TypesOfOperations.BZ + "|"
+				+ TypesOfOperations.JUMP + "|" + TypesOfOperations.BAL + "|" + TypesOfOperations.HALT;
 		if (!controlFlowInstruction.contains(instruction.getOperation()))
-		if (latches.containsKey("E"))
-		{
-		System.out.println(">>>>>>>Recent calculated value>>"+instruction.getDestination().getValue() );
+			if (latches.containsKey("E"))
+			{
+				System.out.println(">>>>>>>Recent calculated value>>" + instruction.getDestination().getValue());
 
-		forwardingReg = instruction.getDestination();
-		
-		}
+				forwardingReg = instruction.getDestination();
+
+			}
 		return instruction;
 	}
 
@@ -281,9 +288,10 @@ public class Simulator
 		Integer registerVal = 0;
 		Integer dest = null;
 		boolean flushRegisterValues = false;
+		boolean branchFUflag = false;
 		ExecutionOfOpcode functionUnit = new ExecutionOfOpcode();
-		String controlFlowInstruction = TypesOfOperations.BNZ + "|" + TypesOfOperations.BZ + "|" + TypesOfOperations.JUMP + "|"
-				+ TypesOfOperations.BAL + "|" + TypesOfOperations.HALT;
+		String controlFlowInstruction = TypesOfOperations.BNZ + "|" + TypesOfOperations.BZ + "|"
+				+ TypesOfOperations.JUMP + "|" + TypesOfOperations.BAL + "|" + TypesOfOperations.HALT;
 
 		if (latches.containsKey("D"))
 		{
@@ -294,18 +302,19 @@ public class Simulator
 				if (!controlFlowInstruction.contains(latches.get("D").getOperation()))
 				{
 					Instruction instructionEx = latches.get("D");
-					//TODO check the src 1 and src 2 with forwarding registers
-					if((instructionEx.getSrc1()!=null)
-							&&(instructionEx.getSrc1().getKey().equals(forwardingReg.getKey() )))
+					// TODO check the src 1 and src 2 with forwarding registers
+					if ((instructionEx.getSrc1() != null)
+							&& (instructionEx.getSrc1().getKey().equals(forwardingReg.getKey())))
 						instructionEx.setSrc1(forwardingReg.getValue());
-					if((instructionEx.getSrc2()!=null)
-							&&(instructionEx.getSrc2().getKey().equals(forwardingReg.getKey() )))
+					if ((instructionEx.getSrc2() != null)
+							&& (instructionEx.getSrc2().getKey().equals(forwardingReg.getKey())))
 						instructionEx.setSrc2(forwardingReg.getValue());
 
 					latches.put("D", functionUnit.executeInstruction(latches.get("D")));
 				} else
 				// Here we have the branch instruction
 				{
+					branchFUflag = true;
 					if (latches.get("D").getOperation().equals(TypesOfOperations.BAL))
 					{
 						specialRegister = currentPC - 1;
@@ -327,11 +336,12 @@ public class Simulator
 					if (currentPC != pcCounter)
 					{
 						currentPC = pcCounter;
-						currentFilePointer = (currentPC - 4000) / 4; 
+						currentFilePointer = (currentPC - 4000) / 4;
 						flushRegisterValues = true;
 					}
 				}
 			}
+			// if(!branchFUflag)
 			moveInstruction("E", "D");
 			if (flushRegisterValues)
 				flushRegister();
@@ -339,44 +349,114 @@ public class Simulator
 
 	}
 
-	private static void ALU()
+	private static void excecuteInstruction2()
 	{
 
 		if (latches.containsKey("E"))
 		{
 			if (!latches.get("E").isNOP())
 			{
-				latches.put("E", nothingtodo(latches.get("E")));
+				latches.put("E", alu2Method(latches.get("E")));
 			}
-			moveInstruction("A", "E");
+			moveInstruction("E2", "E");
+		}
+	}
+
+	private static void branch()
+	{
+		Integer registerVal = 0;
+		Integer dest = null;
+		boolean flushRegisterValues = false;
+		ExecutionOfOpcode functionUnit = new ExecutionOfOpcode();
+		String controlFlowInstruction = TypesOfOperations.BNZ + "|" + TypesOfOperations.BZ + "|"
+				+ TypesOfOperations.JUMP + "|" + TypesOfOperations.BAL + "|" + TypesOfOperations.HALT;
+
+		if (latches.containsKey("D"))
+		{
+			if (!latches.get("D").isNOP())
+			{
+				if (controlFlowInstruction.contains(latches.get("D").getOperation()))
+				{
+
+					if (latches.get("D").getOperation().equals(TypesOfOperations.BAL))
+					{
+						specialRegister = currentPC - 1;
+					}
+					if (latches.get("D").getDestination() != null
+							&& registerFile.containsKey(latches.get("D").getDestination().getKey()))
+					{
+						registerVal = registerFile.get(latches.get("D").getDestination().getKey());
+
+						if (registerVal == null)
+							registerVal = 0;
+					}
+					if (stages.get("B").getDestination() != null)
+					{
+						dest = stages.get("B").getDestination().getValue();
+					}
+					Integer pcCounter = functionUnit.predictBranch(latches.get("D"), dest, currentPC, registerVal,
+							specialRegister);
+					if (currentPC != pcCounter)
+					{
+						currentPC = pcCounter;
+						currentFilePointer = (currentPC - 4000) / 4;
+						flushRegisterValues = true;
+					}
+
+				}
+			}
+			moveInstruction("B", "D");
+			if (flushRegisterValues)
+				flushRegister();
+		}
+		branchDelay();
+	}
+
+	private static void branchDelay()
+	{
+
+		if (latches.containsKey("B"))
+		{
+			if (!latches.get("B").isNOP())
+			{
+				latches.put("B", branchDelayMethod(latches.get("B")));
+			}
+			moveInstruction("Bd", "B");
 		}
 
+	}
+
+	private static Instruction branchDelayMethod(Instruction instruction)
+	{
+
+		return instruction;
 	}
 
 	// Memory Operation
 	private static void memory()
 	{
-		if (latches.containsKey("A"))
+		if (latches.containsKey("E2"))
 		{
-			if (!latches.get("A").isNOP())
-				latches.put("A", performMemoryOperation(latches.get("A")));
+			if (!latches.get("E2").isNOP())
+				latches.put("E2", performMemoryOperation(latches.get("E2")));
 
-			moveInstruction("M", "A");
+			moveInstruction("M", "E2");
 		}
 	}
 
 	// Write back in register file
 	private static void writeback()
 	{
-		String controlFlowInstruction = TypesOfOperations.BNZ + "|" + TypesOfOperations.BZ + "|" + TypesOfOperations.JUMP + "|"
-				+ TypesOfOperations.BAL + "|" + TypesOfOperations.HALT;
+		String controlFlowInstruction = TypesOfOperations.BNZ + "|" + TypesOfOperations.BZ + "|"
+				+ TypesOfOperations.JUMP + "|" + TypesOfOperations.BAL + "|" + TypesOfOperations.HALT;
 		if (latches.containsKey("M"))
 		{
 			moveInstruction("W", "M");
 		}
 		if (stages.containsKey("W") && !stages.get("W").isNOP())
 		{
-			//Check instruction in W is one of the control flow instr or not and not STORE
+			// Check instruction in W is one of the control flow instr or not
+			// and not STORE
 			if (!controlFlowInstruction.contains(stages.get("W").getOperation())
 					&& !stages.get("W").getOperation().equals(TypesOfOperations.STORE))
 			{
@@ -415,7 +495,7 @@ public class Simulator
 	{
 		for (int i = 1; i < n; i++)
 		{
-			if (i>=74)
+			if (i >= 74)
 			{
 				System.out.println("----Cycle 86 + ---");
 			}
@@ -423,7 +503,7 @@ public class Simulator
 			fetchInstruction();
 			decodeInstruction();
 			executeInstruction();
-			ALU();
+			excecuteInstruction2();
 			memory();
 			writeback();
 			Display();
@@ -445,9 +525,16 @@ public class Simulator
 			System.out.println("--------D----------->" + stages.get("D").getContent());
 		if (stages.get("E") != null)
 			System.out.println("--------E----------->" + stages.get("E").getContent());
-		if (stages.get("A") != null)
-			System.out.println("--------A----------->" + stages.get("A").getContent());
+		if (stages.get("E2") != null)
+			System.out.println("--------E2----------->" + stages.get("E2").getContent());
 		if (stages.get("M") != null)
+			// if (stages.get("B") != null)
+			// System.out.println("--------B----------->" +
+			// stages.get("B").getContent());
+			// if (stages.get("Bd") != null)
+			// System.out.println("--------Bd---------->" +
+			// stages.get("Bd").getContent());
+			if (stages.get("M") != null)
 			System.out.println("--------M----------->" + stages.get("M").getContent());
 		if (stages.get("W") != null)
 			System.out.println("--------W----------->" + stages.get("W").getContent());
@@ -459,7 +546,7 @@ public class Simulator
 		System.out.println("\nRegister File: ");
 		for (Entry<String, Integer> register : registerFile.entrySet())
 		{
-			System.out.println(register.getKey() + " : " + register.getValue());
+			System.out.print(register.getKey() + " : " + register.getValue() + "\t");
 		}
 		System.out.println("\nMemory Address: ");
 		// for(int i=0;i<100; i++){
@@ -468,7 +555,7 @@ public class Simulator
 		// memoryValues.append("\n");
 		// }
 		System.out.println(memoryValues);
-		// System.out.println("X:"+ specialRegister);
+		System.out.println("X:" + specialRegister);
 	}
 
 	public static void main(String[] args)
@@ -489,7 +576,7 @@ public class Simulator
 						break;
 					case "S":
 						Initialize();
-						Simulate(Integer.parseInt("200"));
+						Simulate(Integer.parseInt("100"));
 						break;
 					case "D":
 						Display();
