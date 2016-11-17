@@ -46,6 +46,14 @@ public class ExecutionOfOpcode {
 		return instruction;
 	}
 
+	/**
+	 * @param instruction
+	 * @param pDestination
+	 * @param currentPC
+	 * @param registerValue
+	 * @param specialRegister
+	 * @return
+	 */
 	public Integer predictBranch(Instruction instruction, Integer pDestination, Integer currentPC, Integer registerValue, Integer specialRegister){
 		switch(instruction.getOperation()){
 		//Control Flow Instruction(Conditional/ unconditional jump instruction)	
