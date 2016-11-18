@@ -112,12 +112,12 @@ public class Simulator
 
 		if (src1 != null)
 		{
-			isSrc1Valid = checkFlowDependencies(src1, "E");
+			isSrc1Valid = checkFlowDependencies(src1, "E") && checkFlowDependencies(src1, "E2") && checkFlowDependencies(src1, "M");
 			instruction.setSrc1(readRegister(src1));
 		}
 		if (src2 != null)
 		{
-			isSrc2Valid = checkFlowDependencies(src2, "E");
+			isSrc2Valid = checkFlowDependencies(src2, "E") && checkFlowDependencies(src2, "E2") && checkFlowDependencies(src2, "M");
 			instruction.setSrc2(readRegister(src2));
 		}
 		if (instruction.getOperation().equals(TypesOfOperations.STORE))
@@ -131,6 +131,7 @@ public class Simulator
 
 			// TODO If this wont match, it means for STORE the register required
 			// is not yet in RegisterFile
+			isDestValid = checkFlowDependencies(destination, "E") && checkFlowDependencies(destination, "E2") && checkFlowDependencies(destination, "M");
 			instruction.setDestination(readRegister(destination));
 			isSourceValid = isSrc1Valid && isSrc2Valid && isDestValid;
 			return instruction;
@@ -267,21 +268,6 @@ public class Simulator
 		}
 	}
 
-	private static Instruction alu2Method(Instruction instruction)
-	{
-		String controlFlowInstruction = TypesOfOperations.BNZ + "|" + TypesOfOperations.BZ + "|"
-				+ TypesOfOperations.JUMP + "|" + TypesOfOperations.BAL + "|" + TypesOfOperations.HALT;
-		if (!controlFlowInstruction.contains(instruction.getOperation()))
-			if (latches.containsKey("E"))
-			{
-				System.out.println(">>>>>>>Recent calculated value>>" + instruction.getDestination().getValue());
-
-				forwardingReg = instruction.getDestination();
-
-			}
-		return instruction;
-	}
-
 	// Execute Instruction based on operation
 	private static void executeInstruction()
 	{
@@ -303,66 +289,33 @@ public class Simulator
 				{
 					Instruction instructionEx = latches.get("D");
 					// TODO check the src 1 and src 2 with forwarding registers
-					if ((instructionEx.getSrc1() != null)
-							&& (instructionEx.getSrc1().getKey().equals(forwardingReg.getKey())))
-						instructionEx.setSrc1(forwardingReg.getValue());
-					if ((instructionEx.getSrc2() != null)
-							&& (instructionEx.getSrc2().getKey().equals(forwardingReg.getKey())))
-						instructionEx.setSrc2(forwardingReg.getValue());
+//					if ((instructionEx.getSrc1() != null)
+//							&& (instructionEx.getSrc1().getKey().equals(forwardingReg.getKey())))
+//						instructionEx.setSrc1(forwardingReg.getValue());
+//					if ((instructionEx.getSrc2() != null)
+//							&& (instructionEx.getSrc2().getKey().equals(forwardingReg.getKey())))
+//						instructionEx.setSrc2(forwardingReg.getValue());
 
 					latches.put("D", functionUnit.executeInstruction(latches.get("D")));
 				} else
 				// Here we have the branch instruction
 				{
 					branchFUflag = true;
-					if (latches.get("D").getOperation().equals(TypesOfOperations.BAL))
-					{
-						specialRegister = currentPC - 1;
-					}
-					if (latches.get("D").getDestination() != null
-							&& registerFile.containsKey(latches.get("D").getDestination().getKey()))
-					{
-						registerVal = registerFile.get(latches.get("D").getDestination().getKey());
-
-						if (registerVal == null)
-							registerVal = 0;
-					}
-					if (stages.get("E").getDestination() != null)
-					{
-						dest = stages.get("E").getDestination().getValue();
-					}
-					Integer pcCounter = functionUnit.predictBranch(latches.get("D"), dest, currentPC, registerVal,
-							specialRegister);
-					if (currentPC != pcCounter)
-					{
-						currentPC = pcCounter;
-						currentFilePointer = (currentPC - 4000) / 4;
-						flushRegisterValues = true;
-					}
+					latches.put("E", stages.get("E"));
+					stages.put("E", new Instruction()); // Add NOP in the ALU1
 				}
 			}
-			// if(!branchFUflag)
-			moveInstruction("E", "D");
-			if (flushRegisterValues)
-				flushRegister();
-		}
-
-	}
-
-	private static void excecuteInstruction2()
-	{
-
-		if (latches.containsKey("E"))
-		{
-			if (!latches.get("E").isNOP())
+			if (!branchFUflag)
 			{
-				latches.put("E", alu2Method(latches.get("E")));
+				moveInstruction("E", "D");
+				if (flushRegisterValues)
+					flushRegister();
 			}
-			moveInstruction("E2", "E");
 		}
 	}
 
-	private static void branch()
+	// -----------------------------------------------------------------------------------------
+	private static void branchInstruction()
 	{
 		Integer registerVal = 0;
 		Integer dest = null;
@@ -377,53 +330,119 @@ public class Simulator
 			{
 				if (controlFlowInstruction.contains(latches.get("D").getOperation()))
 				{
-
-					if (latches.get("D").getOperation().equals(TypesOfOperations.BAL))
-					{
-						specialRegister = currentPC - 1;
-					}
-					if (latches.get("D").getDestination() != null
-							&& registerFile.containsKey(latches.get("D").getDestination().getKey()))
-					{
-						registerVal = registerFile.get(latches.get("D").getDestination().getKey());
-
-						if (registerVal == null)
-							registerVal = 0;
-					}
-					if (stages.get("B").getDestination() != null)
-					{
-						dest = stages.get("B").getDestination().getValue();
-					}
-					Integer pcCounter = functionUnit.predictBranch(latches.get("D"), dest, currentPC, registerVal,
-							specialRegister);
-					if (currentPC != pcCounter)
-					{
-						currentPC = pcCounter;
-						currentFilePointer = (currentPC - 4000) / 4;
-						flushRegisterValues = true;
-					}
-
+					if (stages.containsKey("B1"))
+						latches.put("B1", stages.get("B1"));
+					else
+						latches.put("B1", new Instruction());
+					stages.put("B1", latches.get("D"));
+				} else
+				{
+					if (stages.containsKey("B1"))
+						latches.put("B1", stages.get("B1"));
+					else
+						latches.put("B1", new Instruction());
+					stages.put("B1", new Instruction());
 				}
+			} else
+			{
+				if (stages.containsKey("B1"))
+					latches.put("B1", stages.get("B1"));
+				else
+					latches.put("B1", new Instruction());
+				stages.put("B1", new Instruction());
 			}
-			moveInstruction("B", "D");
-			if (flushRegisterValues)
-				flushRegister();
 		}
-		branchDelay();
+
+		if (latches.containsKey("D"))
+		{
+			if (!latches.get("D").isNOP() && controlFlowInstruction.contains(latches.get("D").getOperation()))
+			{
+				if (latches.get("D").getOperation().equals(TypesOfOperations.BAL))
+				{
+					specialRegister = currentPC - 1;
+				}
+				if (latches.get("D").getDestination() != null
+						&& registerFile.containsKey(latches.get("D").getDestination().getKey()))
+				{
+					registerVal = registerFile.get(latches.get("D").getDestination().getKey());
+
+					if (registerVal == null)
+						registerVal = 0;
+				}
+				if (stages.get("E2").getDestination() != null)
+				{
+					dest = stages.get("E2").getDestination().getValue();
+				}
+				Integer pcCounter = functionUnit.predictBranch(latches.get("D"), dest, currentPC, registerVal,
+						specialRegister);
+				if (currentPC != pcCounter)
+				{
+					currentPC = pcCounter;
+					currentFilePointer = (currentPC - 4000) / 4;
+					flushRegisterValues = true;
+				}
+				if (flushRegisterValues)
+					flushRegister();
+			}
+		}
+		// moveInstruction("B", "D");
+		// if (flushRegisterValues)
+		// flushRegister();
 	}
 
-	private static void branchDelay()
+	private static void delayStage()
 	{
 
-		if (latches.containsKey("B"))
+		if (latches.containsKey("B1"))
 		{
-			if (!latches.get("B").isNOP())
-			{
-				latches.put("B", branchDelayMethod(latches.get("B")));
-			}
-			moveInstruction("Bd", "B");
-		}
+			if (stages.containsKey("Dly"))
+				latches.put("Dly", stages.get("Dly"));
+			else
+				latches.put("Dly", new Instruction());
 
+			stages.put("Dly", latches.get("B1"));
+		} else
+		{
+			// latches.put("B", branchDelayMethod(latches.get("B")));
+
+			stages.put("Dly", new Instruction());
+		}
+		// moveInstruction("Bd", "B");
+	}
+
+	
+
+	private static void executeInstruction2()
+	{
+
+		if (latches.containsKey("E"))
+		{
+			if (!latches.get("E").isNOP())
+			{
+				// latches.put("E", alu2Method(latches.get("E")));
+			}
+			moveInstruction("E2", "E");
+		} else
+		{
+			latches.put("E2", new Instruction());// Add NOP in latch for the
+													// next
+													// Stage to consume
+		}
+	}
+
+	private static Instruction alu2Method(Instruction instruction)
+	{
+		String controlFlowInstruction = TypesOfOperations.BNZ + "|" + TypesOfOperations.BZ + "|"
+				+ TypesOfOperations.JUMP + "|" + TypesOfOperations.BAL + "|" + TypesOfOperations.HALT;
+		if (!controlFlowInstruction.contains(instruction.getOperation()))
+			if (latches.containsKey("E"))
+			{
+				System.out.println(">>>>>>>Recent calculated value>>" + instruction.getDestination().getValue());
+
+				forwardingReg = instruction.getDestination();
+
+			}
+		return instruction;
 	}
 
 	private static Instruction branchDelayMethod(Instruction instruction)
@@ -435,12 +454,18 @@ public class Simulator
 	// Memory Operation
 	private static void memory()
 	{
-		if (latches.containsKey("E2"))
+		if (latches.containsKey("Dly") && !latches.get("Dly").isNOP())
 		{
-			if (!latches.get("E2").isNOP())
-				latches.put("E2", performMemoryOperation(latches.get("E2")));
+			moveInstruction("M", "Dly");
+		} else
+		{
+			if (latches.containsKey("E2"))
+			{
+				if (!latches.get("E2").isNOP())
+					latches.put("E2", performMemoryOperation(latches.get("E2")));
 
-			moveInstruction("M", "E2");
+				moveInstruction("M", "E2");
+			}
 		}
 	}
 
@@ -495,7 +520,11 @@ public class Simulator
 	{
 		for (int i = 1; i < n; i++)
 		{
-			if (i >= 74)
+			if (i >= 27)
+			{
+				System.out.println("----Cycle 86 + ---");
+			}
+			if (i >= 17)
 			{
 				System.out.println("----Cycle 86 + ---");
 			}
@@ -503,7 +532,9 @@ public class Simulator
 			fetchInstruction();
 			decodeInstruction();
 			executeInstruction();
-			excecuteInstruction2();
+			executeInstruction2();
+			branchInstruction();
+			delayStage();
 			memory();
 			writeback();
 			Display();
@@ -527,14 +558,11 @@ public class Simulator
 			System.out.println("--------E----------->" + stages.get("E").getContent());
 		if (stages.get("E2") != null)
 			System.out.println("--------E2----------->" + stages.get("E2").getContent());
+		if (stages.get("B1") != null)
+			System.out.println("--------B1----------->" + stages.get("B1").getContent());
+		if (stages.get("Dly") != null)
+			System.out.println("--------Dly---------->" + stages.get("Dly").getContent());
 		if (stages.get("M") != null)
-			// if (stages.get("B") != null)
-			// System.out.println("--------B----------->" +
-			// stages.get("B").getContent());
-			// if (stages.get("Bd") != null)
-			// System.out.println("--------Bd---------->" +
-			// stages.get("Bd").getContent());
-			if (stages.get("M") != null)
 			System.out.println("--------M----------->" + stages.get("M").getContent());
 		if (stages.get("W") != null)
 			System.out.println("--------W----------->" + stages.get("W").getContent());
