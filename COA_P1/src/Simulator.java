@@ -382,7 +382,10 @@ public class Simulator
 					flushRegisterValues = true;
 				}
 				if (flushRegisterValues)
+				{
 					flushRegister();
+					currentPC = currentPC - 4;
+				}
 			}
 		}
 		// moveInstruction("B", "D");
@@ -603,8 +606,9 @@ public class Simulator
 						Initialize();
 						break;
 					case "S":
+						
 						Initialize();
-						Simulate(Integer.parseInt("100"));
+						Simulate(Integer.parseInt("1000"));
 						break;
 					case "D":
 						Display();
