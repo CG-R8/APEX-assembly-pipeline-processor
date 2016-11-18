@@ -112,14 +112,16 @@ public class Simulator
 
 		if (src1 != null)
 		{
-			isSrc1Valid = checkFlowDependencies(src1, "E") ;
-					//&& checkFlowDependencies(src1, "E2") && checkFlowDependencies(src1, "M");
+			isSrc1Valid = checkFlowDependencies(src1, "E");
+			// && checkFlowDependencies(src1, "E2") &&
+			// checkFlowDependencies(src1, "M");
 			instruction.setSrc1(readRegister(src1));
 		}
 		if (src2 != null)
 		{
-			isSrc2Valid = checkFlowDependencies(src2, "E") ;
-					//&& checkFlowDependencies(src2, "E2") && checkFlowDependencies(src2, "M");
+			isSrc2Valid = checkFlowDependencies(src2, "E");
+			// && checkFlowDependencies(src2, "E2") &&
+			// checkFlowDependencies(src2, "M");
 			instruction.setSrc2(readRegister(src2));
 		}
 		if (instruction.getOperation().equals(TypesOfOperations.STORE))
@@ -133,9 +135,17 @@ public class Simulator
 
 			// TODO If this wont match, it means for STORE the register required
 			// is not yet in RegisterFile
-//			isDestValid = checkFlowDependencies(destination, "E");
-					//&& checkFlowDependencies(destination, "E2") && checkFlowDependencies(destination, "M");
-			instruction.setDestination(readRegister(destination));
+			isDestValid = checkFlowDependencies(destination, "E") && checkFlowDependencies(destination, "E2")
+					&& checkFlowDependencies(destination, "M");
+			if (!isDestValid)// there is dependancy for store register
+			{
+				isDestValid = true;
+				instruction.setDestination(-1);
+				;
+			} else
+			{
+				instruction.setDestination(readRegister(destination));
+			}
 			isSourceValid = isSrc1Valid && isSrc2Valid && isDestValid;
 			return instruction;
 		}
@@ -184,13 +194,33 @@ public class Simulator
 	// Read value from memory into destination in case of LOAD instruction)
 	private static Instruction performMemoryOperation(Instruction instruction)
 	{
-		if (instruction.getOperation() != null && instruction.getOperation().equals(TypesOfOperations.STORE))
+		try
 		{
-			memory[instruction.getMemoryAddress()] = instruction.getDestination().getValue();
-		}
-		if (instruction.getOperation() != null && instruction.getOperation().equals(TypesOfOperations.LOAD))
+			if (instruction.getOperation() != null && instruction.getOperation().equals(TypesOfOperations.STORE))
+			{
+				Instruction lastInstructionM = stages.get("M");
+				if(lastInstructionM.getOperation().equals("LOAD")
+						&&(lastInstructionM.getDestination().getKey().equals(instruction.getDestination().getKey())))
+				{
+					instruction.setDestination(lastInstructionM.getDestination().getValue());
+				}else if((!lastInstructionM.isNOP())
+						&&lastInstructionM.getDestination().getKey().equals(instruction.getDestination().getKey()))
+				{
+					instruction.setDestination(lastInstructionM.getDestination().getValue());
+				}else
+				{
+					instruction.setDestination(readRegister(instruction.getDestination()));
+				}
+				memory[instruction.getMemoryAddress()] = instruction.getDestination().getValue();
+			}
+			if (instruction.getOperation() != null && instruction.getOperation().equals(TypesOfOperations.LOAD))
+			{
+				instruction.setDestination(memory[instruction.getMemoryAddress()]);
+				
+			}
+		} catch (Exception e)
 		{
-			instruction.setDestination(memory[instruction.getMemoryAddress()]);
+			e.printStackTrace();
 		}
 		return instruction;
 	}
@@ -416,8 +446,6 @@ public class Simulator
 		// moveInstruction("Bd", "B");
 	}
 
-	
-
 	private static void executeInstruction2()
 	{
 
@@ -474,6 +502,7 @@ public class Simulator
 			}
 		}
 	}
+
 	// Write back in register file
 	private static void writeback()
 	{
@@ -578,11 +607,11 @@ public class Simulator
 			System.out.print(register.getKey() + " : " + register.getValue() + "\t");
 		}
 		System.out.println("\nMemory Address: ");
-		// for(int i=0;i<100; i++){
-		// memoryValues.append(" [" + i + " - " + memory[i] + "] ");
-		// if(i > 0 && i % 10 == 0)
-		// memoryValues.append("\n");
-		// }
+		 for(int i=0;i<100; i++){
+		 memoryValues.append(" [" + i + " - " + memory[i] + "] ");
+		 if(i > 0 && i % 10 == 0)
+		 memoryValues.append("\n");
+		 }
 		System.out.println(memoryValues);
 		System.out.println("X:" + specialRegister);
 	}
@@ -604,9 +633,9 @@ public class Simulator
 						Initialize();
 						break;
 					case "S":
-						
+
 						Initialize();
-						Simulate(Integer.parseInt("1000"));
+						Simulate(Integer.parseInt("300"));
 						break;
 					case "D":
 						Display();
