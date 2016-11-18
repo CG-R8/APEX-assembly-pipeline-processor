@@ -112,12 +112,14 @@ public class Simulator
 
 		if (src1 != null)
 		{
-			isSrc1Valid = checkFlowDependencies(src1, "E") && checkFlowDependencies(src1, "E2") && checkFlowDependencies(src1, "M");
+			isSrc1Valid = checkFlowDependencies(src1, "E") ;
+					//&& checkFlowDependencies(src1, "E2") && checkFlowDependencies(src1, "M");
 			instruction.setSrc1(readRegister(src1));
 		}
 		if (src2 != null)
 		{
-			isSrc2Valid = checkFlowDependencies(src2, "E") && checkFlowDependencies(src2, "E2") && checkFlowDependencies(src2, "M");
+			isSrc2Valid = checkFlowDependencies(src2, "E") ;
+					//&& checkFlowDependencies(src2, "E2") && checkFlowDependencies(src2, "M");
 			instruction.setSrc2(readRegister(src2));
 		}
 		if (instruction.getOperation().equals(TypesOfOperations.STORE))
@@ -131,7 +133,8 @@ public class Simulator
 
 			// TODO If this wont match, it means for STORE the register required
 			// is not yet in RegisterFile
-			isDestValid = checkFlowDependencies(destination, "E") && checkFlowDependencies(destination, "E2") && checkFlowDependencies(destination, "M");
+//			isDestValid = checkFlowDependencies(destination, "E");
+					//&& checkFlowDependencies(destination, "E2") && checkFlowDependencies(destination, "M");
 			instruction.setDestination(readRegister(destination));
 			isSourceValid = isSrc1Valid && isSrc2Valid && isDestValid;
 			return instruction;
@@ -289,12 +292,12 @@ public class Simulator
 				{
 					Instruction instructionEx = latches.get("D");
 					// TODO check the src 1 and src 2 with forwarding registers
-//					if ((instructionEx.getSrc1() != null)
-//							&& (instructionEx.getSrc1().getKey().equals(forwardingReg.getKey())))
-//						instructionEx.setSrc1(forwardingReg.getValue());
-//					if ((instructionEx.getSrc2() != null)
-//							&& (instructionEx.getSrc2().getKey().equals(forwardingReg.getKey())))
-//						instructionEx.setSrc2(forwardingReg.getValue());
+					if ((instructionEx.getSrc1() != null)
+							&& (instructionEx.getSrc1().getKey().equals(forwardingReg.getKey())))
+						instructionEx.setSrc1(forwardingReg.getValue());
+					if ((instructionEx.getSrc2() != null)
+							&& (instructionEx.getSrc2().getKey().equals(forwardingReg.getKey())))
+						instructionEx.setSrc2(forwardingReg.getValue());
 
 					latches.put("D", functionUnit.executeInstruction(latches.get("D")));
 				} else
@@ -422,7 +425,7 @@ public class Simulator
 		{
 			if (!latches.get("E").isNOP())
 			{
-				// latches.put("E", alu2Method(latches.get("E")));
+				latches.put("E", alu2Method(latches.get("E")));
 			}
 			moveInstruction("E2", "E");
 		} else
@@ -522,11 +525,7 @@ public class Simulator
 	{
 		for (int i = 1; i < n; i++)
 		{
-			if (i >= 27)
-			{
-				System.out.println("----Cycle 86 + ---");
-			}
-			if (i >= 17)
+			if (i == 81)
 			{
 				System.out.println("----Cycle 86 + ---");
 			}
