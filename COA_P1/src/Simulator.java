@@ -471,7 +471,6 @@ public class Simulator
 			}
 		}
 	}
-
 	// Write back in register file
 	private static void writeback()
 	{
