@@ -16,9 +16,24 @@ public class Simulator
 	static int currentPC;
 	static int currentFilePointer;
 	static int[] memoryBlocks;
+	/**
+	 * Stages represent the current state of all stages.It is the hashmp of current cycles instruction
+	 */
 	static Map<String, Instruction> stages;
+	/**
+	 * Latches contain the stages of previous cycle.So every time current cycle's state is processed it can be moved to latches.
+	 * <p>
+	 * For example : 
+	 */
 	static Map<String, Instruction> latches;
+	/**
+	 * This hashmap contains the register details (register name and its value)
+	 * This will get updated only when instruction is preocesed and get done in writeback stage
+	 */
 	static Map<String, Integer> registerFile;
+	/**
+	 * This register sets value when BAL isntrucion calculate its address.
+	 */
 	static int specialRegister;
 	static boolean isComplete;
 	static boolean isValidSource;
@@ -28,7 +43,10 @@ public class Simulator
 	/**
 	 * Fetch stage: Check current instruction in Decode stage is present and is
 	 * NOP? then check the registers values and set {@isSourceValid} flag
-	 * 
+	 * <p>
+	 * if flag is set, it mean we can process new instruction from file.
+	 * When we fetch (pares)new instruction we advance to next stage of cycle.
+	 *And create a copy of that instrucition into latch hashmap for fetch. 
 	 * 
 	 */
 	private static void fetchStage()
@@ -87,6 +105,11 @@ public class Simulator
 		}
 	}
 
+	/**
+	 * This method is used to perform the ALU1 functioniting.
+	 * 
+	 * 
+	 */
 	private static void execute1()
 	{
 		boolean flushRegisterValues = false;
@@ -481,7 +504,7 @@ public class Simulator
 
 		} catch (Exception ex)
 		{
-			// ex.printStackTrace();
+//			 ex.printStackTrace();
 		}
 		return instr;
 	}
