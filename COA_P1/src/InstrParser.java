@@ -9,7 +9,8 @@ public class InstrParser
 	/**
 	 * This function takes string and return its integer value
 	 * 
-	 * @param any string
+	 * @param any
+	 *            string
 	 * @return number
 	 */
 	private static boolean isNumeric(String str)
@@ -30,7 +31,8 @@ public class InstrParser
 	 * Creates instruction derived from Instruction class
 	 * 
 	 * @param instruction
-	 * @param Program Counter
+	 * @param Program
+	 *            Counter
 	 * @return instruction
 	 */
 	public Instruction parseInstruction(String instr, int pcCounter)
@@ -51,6 +53,17 @@ public class InstrParser
 					instruction = new Instruction(instrArray[0], new KeyValue<String, Integer>(instrArray[1], null),
 							new KeyValue<String, Integer>(instrArray[2], null),
 							new KeyValue<String, Integer>(instrArray[3], null), null, instr);
+					break;
+				case TypesOfOperations.MOVC:
+					if (isNumeric(instrArray[2]))
+					{
+						instruction = new Instruction(instrArray[0], new KeyValue<String, Integer>(instrArray[1], null),
+								null, null, Integer.parseInt(instrArray[2]), instr);
+					} else
+					{
+						instruction = new Instruction(instrArray[0], new KeyValue<String, Integer>(instrArray[1], null),
+								new KeyValue<String, Integer>(instrArray[2], null), null, null, instr);
+					}
 					break;
 				case TypesOfOperations.MUL:
 					instruction = new Instruction(instrArray[0], new KeyValue<String, Integer>(instrArray[1], null),
@@ -98,28 +111,7 @@ public class InstrParser
 								new KeyValue<String, Integer>(instrArray[3], null), null, instr);
 					}
 					break;
-				case TypesOfOperations.MOVC:
-					if (isNumeric(instrArray[2]))
-					{
-						instruction = new Instruction(instrArray[0], new KeyValue<String, Integer>(instrArray[1], null),
-								null, null, Integer.parseInt(instrArray[2]), instr);
-					} else
-					{
-						instruction = new Instruction(instrArray[0], new KeyValue<String, Integer>(instrArray[1], null),
-								new KeyValue<String, Integer>(instrArray[2], null), null, null, instr);
-					}
-					break;
-				case TypesOfOperations.MOV:
-					if (isNumeric(instrArray[2]))
-					{
-						instruction = new Instruction(instrArray[0], new KeyValue<String, Integer>(instrArray[1], null),
-								null, null, Integer.parseInt(instrArray[2]), instr);
-					} else
-					{
-						instruction = new Instruction(instrArray[0], new KeyValue<String, Integer>(instrArray[1], null),
-								new KeyValue<String, Integer>(instrArray[2], null), null, null, instr);
-					}
-					break;
+
 				case TypesOfOperations.BZ:
 					instruction = new Instruction(instrArray[0], null, null, null, Integer.parseInt(instrArray[1]),
 							instr);
