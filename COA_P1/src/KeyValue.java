@@ -6,29 +6,29 @@ import java.util.Map;
  * @param <V> like 0,1,2....
  */
 final class KeyValue<K, V> implements Map.Entry<K, V> {
-	
-    private final K key;
-    private V value;
+    private V regValue;
+    private final K registerName;
 
-    public KeyValue(K key, V value) {
-        this.key = key;
-        this.value = value;
+
+    public KeyValue(K registerName, V regValue) {
+        this.registerName = registerName;
+        this.regValue = regValue;
     }
 
     @Override
     public K getKey() {
-        return key;
+        return registerName;
     }
 
     @Override
     public V getValue() {
-        return value;
+        return regValue;
     }
 
     @Override
     public V setValue(V value) {
-        V old = this.value;
-        this.value = value;
+        V old = this.regValue;
+        this.regValue = value;
         return old;
     }
 }

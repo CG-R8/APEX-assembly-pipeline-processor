@@ -22,7 +22,8 @@ public class Simulator
 	static int specialRegister;
 	static boolean stopExecution;
 	static boolean isSourceValid;
-	static public KeyValue<String, Integer> forwardingReg;
+	static public KeyValue<String, Integer> forwardingReg = null;
+	static public KeyValue<String, Integer> forwardingRegMEMtoEX = null;
 
 	/**
 	 * 
@@ -109,6 +110,7 @@ public class Simulator
 		KeyValue<String, Integer> src2 = instruction.getSrc2();
 		KeyValue<String, Integer> destination = instruction.getDestination();
 		boolean isSrc1Valid = true, isSrc2Valid = true, isDestValid = true;
+		boolean isBalValid = true;
 
 		if (src1 != null)
 		{
@@ -123,6 +125,11 @@ public class Simulator
 			// && checkFlowDependencies(src2, "E2") &&
 			// checkFlowDependencies(src2, "M");
 			instruction.setSrc2(readRegister(src2));
+		}
+		if (instruction.getOperation().equals(TypesOfOperations.BAL))
+		{
+			isBalValid = checkFlowDependencies(destination, "E");
+			instruction.setDestination(-1);
 		}
 		if (instruction.getOperation().equals(TypesOfOperations.STORE))
 		{
@@ -149,7 +156,7 @@ public class Simulator
 			isSourceValid = isSrc1Valid && isSrc2Valid && isDestValid;
 			return instruction;
 		}
-		isSourceValid = isSrc1Valid && isSrc2Valid;
+		isSourceValid = isSrc1Valid && isSrc2Valid&&isBalValid;
 		return instruction;
 	}
 
@@ -171,15 +178,22 @@ public class Simulator
 	 */
 	private static boolean checkFlowDependencies(KeyValue<String, Integer> src, String stage)
 	{
+		boolean isDependent = true;
+		
 		try
 		{
-			return !(stages.containsKey(stage) && stages.get(stage).getOperation() != null
+			isDependent=stages.containsKey(stage) && stages.get(stage).getOperation() != null
 			// If instruction is not STORE
 					&& !stages.get(stage).getOperation().equals(TypesOfOperations.STORE)
 					// If destination of instruction is not NULL
 					&& stages.get(stage).getDestination() != null
 					// If there is same Register in both instruction
-					&& stages.get(stage).getDestination().getKey().equals(src.getKey()));
+					&& stages.get(stage).getDestination().getKey().equals(src.getKey());
+			//TODO what if the branch is dependent 
+			
+			
+			
+			return !(isDependent);
 		} catch (Exception e)
 		{
 			System.err.println("Error while checking the flow dependancies");
@@ -199,15 +213,15 @@ public class Simulator
 			if (instruction.getOperation() != null && instruction.getOperation().equals(TypesOfOperations.STORE))
 			{
 				Instruction lastInstructionM = stages.get("M");
-				if(lastInstructionM.getOperation().equals("LOAD")
-						&&(lastInstructionM.getDestination().getKey().equals(instruction.getDestination().getKey())))
+				if (!lastInstructionM.isNOP() && lastInstructionM.getOperation().equals("LOAD")
+						&& (lastInstructionM.getDestination().getKey().equals(instruction.getDestination().getKey())))
 				{
 					instruction.setDestination(lastInstructionM.getDestination().getValue());
-				}else if((!lastInstructionM.isNOP())
-						&&lastInstructionM.getDestination().getKey().equals(instruction.getDestination().getKey()))
+				} else if ((!lastInstructionM.isNOP())
+						&& lastInstructionM.getDestination().getKey().equals(instruction.getDestination().getKey()))
 				{
 					instruction.setDestination(lastInstructionM.getDestination().getValue());
-				}else
+				} else
 				{
 					instruction.setDestination(readRegister(instruction.getDestination()));
 				}
@@ -216,7 +230,7 @@ public class Simulator
 			if (instruction.getOperation() != null && instruction.getOperation().equals(TypesOfOperations.LOAD))
 			{
 				instruction.setDestination(memory[instruction.getMemoryAddress()]);
-				
+
 			}
 		} catch (Exception e)
 		{
@@ -322,12 +336,32 @@ public class Simulator
 				{
 					Instruction instructionEx = latches.get("D");
 					// TODO check the src 1 and src 2 with forwarding registers
+					if ((forwardingReg != null) && (forwardingRegMEMtoEX != null)
+							&& forwardingReg.getKey().equals(forwardingRegMEMtoEX.getKey()))
+					{
+						System.out.println("======================same==========================================");
+						forwardingRegMEMtoEX.setValue(forwardingReg.getValue());
+					}
+
 					if ((instructionEx.getSrc1() != null)
 							&& (instructionEx.getSrc1().getKey().equals(forwardingReg.getKey())))
 						instructionEx.setSrc1(forwardingReg.getValue());
 					if ((instructionEx.getSrc2() != null)
 							&& (instructionEx.getSrc2().getKey().equals(forwardingReg.getKey())))
 						instructionEx.setSrc2(forwardingReg.getValue());
+					if ((instructionEx.getSrc1() != null)
+							&& (instructionEx.getSrc1().getKey().equals(forwardingRegMEMtoEX.getKey())))
+					{
+						System.out.println("================================================================");
+						instructionEx.setSrc1(forwardingRegMEMtoEX.getValue());
+					}
+					if ((instructionEx.getSrc2() != null)
+							&& (instructionEx.getSrc2().getKey().equals(forwardingRegMEMtoEX.getKey())))
+					{
+						System.out.println("================================================================");
+
+						instructionEx.setSrc2(forwardingRegMEMtoEX.getValue());
+					}
 
 					latches.put("D", functionUnit.executeInstruction(latches.get("D")));
 				} else
@@ -357,6 +391,14 @@ public class Simulator
 		String controlFlowInstruction = TypesOfOperations.BNZ + "|" + TypesOfOperations.BZ + "|"
 				+ TypesOfOperations.JUMP + "|" + TypesOfOperations.BAL + "|" + TypesOfOperations.HALT;
 
+		
+		
+		
+		Instruction branchInstr = new Instruction();
+		branchInstr = latches.get("D");
+		
+		
+		
 		if (latches.containsKey("D"))
 		{
 			if (!latches.get("D").isNOP())
@@ -390,10 +432,35 @@ public class Simulator
 		{
 			if (!latches.get("D").isNOP() && controlFlowInstruction.contains(latches.get("D").getOperation()))
 			{
+				
+				
+				System.out.println("================Forwarding 1 : "+forwardingReg.getKey()+" value : "+forwardingReg.getValue());
+				System.out.println("================Forwarding from Mem : "+forwardingRegMEMtoEX.getKey()+" Value :  "+forwardingRegMEMtoEX.getValue());
+				
+				
+				if ((forwardingReg != null) && (forwardingRegMEMtoEX != null)
+						&& forwardingReg.getKey().equals(forwardingRegMEMtoEX.getKey()))
+				{
+					System.out.println("======================same==========================================");
+					forwardingRegMEMtoEX.setValue(forwardingReg.getValue());
+				}
+
+				if ((branchInstr.getDestination() != null)
+						&& (branchInstr.getDestination().getKey().equals(forwardingReg.getKey())))
+					branchInstr.setDestination(forwardingReg.getValue());
+				if ((branchInstr.getDestination() != null)
+						&& (branchInstr.getDestination().getKey().equals(forwardingRegMEMtoEX.getKey())))
+				{
+					System.out.println("================================================================");
+					branchInstr.setDestination(forwardingRegMEMtoEX.getValue());
+				}
+					
+				
 				if (latches.get("D").getOperation().equals(TypesOfOperations.BAL))
 				{
-					specialRegister = currentPC - 1;
+					specialRegister = currentPC - 4;
 				}
+				registerVal=latches.get("D").getLiteral();
 				if (latches.get("D").getDestination() != null
 						&& registerFile.containsKey(latches.get("D").getDestination().getKey()))
 				{
@@ -420,10 +487,7 @@ public class Simulator
 					currentPC = currentPC - 4;
 				}
 			}
-		}
-		// moveInstruction("B", "D");
-		// if (flushRegisterValues)
-		// flushRegister();
+			}
 	}
 
 	private static void delayStage()
@@ -496,9 +560,16 @@ public class Simulator
 			if (latches.containsKey("E2"))
 			{
 				if (!latches.get("E2").isNOP())
+				{
 					latches.put("E2", performMemoryOperation(latches.get("E2")));
+					// TODO mem to EX forwarding
+					forwardingRegMEMtoEX = latches.get("E2").getDestination();
+					System.out.println(">>>>>>>MEM>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>" + forwardingRegMEMtoEX.getValue());
+
+				}
 
 				moveInstruction("M", "E2");
+
 			}
 		}
 	}
@@ -554,7 +625,7 @@ public class Simulator
 	{
 		for (int i = 1; i < n; i++)
 		{
-			if (i == 81)
+			if (i == 14)
 			{
 				System.out.println("----Cycle 86 + ---");
 			}
@@ -604,14 +675,14 @@ public class Simulator
 		System.out.println("\nRegister File: ");
 		for (Entry<String, Integer> register : registerFile.entrySet())
 		{
-			System.out.print(register.getKey() + " : " + register.getValue() + "\t");
+			System.out.print(register.getKey() + " : " + register.getValue() + "|\t|");
 		}
-		System.out.println("\nMemory Address: ");
-		 for(int i=0;i<100; i++){
-		 memoryValues.append(" [" + i + " - " + memory[i] + "] ");
-		 if(i > 0 && i % 10 == 0)
-		 memoryValues.append("\n");
-		 }
+		// System.out.println("\nMemory Address: ");
+		// for(int i=0;i<100; i++){
+		// memoryValues.append(" [" + i + " - " + memory[i] + "] ");
+		// if(i > 0 && i % 10 == 0)
+		// memoryValues.append("\n");
+		// }
 		System.out.println(memoryValues);
 		System.out.println("X:" + specialRegister);
 	}
@@ -635,7 +706,7 @@ public class Simulator
 					case "S":
 
 						Initialize();
-						Simulate(Integer.parseInt("300"));
+						Simulate(Integer.parseInt("400"));
 						break;
 					case "D":
 						Display();
