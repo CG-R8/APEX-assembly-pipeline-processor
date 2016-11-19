@@ -6,8 +6,7 @@ public class ExecutionOfOpcode
 	// destination field of Instruction Object
 	public Instruction executeInstruction(Instruction instruction)
 	{
-		int src1 = instruction.getSrc1().getValue();
-		int src2 = instruction.getSrc2().getValue();
+
 		switch (instruction.getOperation())
 			{
 			// Register to Register Instruction (Source1 and Source2)
