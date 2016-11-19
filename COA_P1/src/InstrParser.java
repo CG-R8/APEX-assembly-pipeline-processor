@@ -28,70 +28,70 @@ public class InstrParser
 			switch (instrArray[0])
 				{
 				case TypesOfOperations.ADD:
-					instruction = new Instruction(instrArray[0], new KeyValue<String, Integer>(instrArray[1], null),
-							new KeyValue<String, Integer>(instrArray[2], null),
-							new KeyValue<String, Integer>(instrArray[3], null), null, instr);
+					instruction = new Instruction(instrArray[0], new RegisgerName_Value<String, Integer>(instrArray[1], null),
+							new RegisgerName_Value<String, Integer>(instrArray[2], null),
+							new RegisgerName_Value<String, Integer>(instrArray[3], null), null, instr);
 					break;
 				case TypesOfOperations.SUB:
-					instruction = new Instruction(instrArray[0], new KeyValue<String, Integer>(instrArray[1], null),
-							new KeyValue<String, Integer>(instrArray[2], null),
-							new KeyValue<String, Integer>(instrArray[3], null), null, instr);
+					instruction = new Instruction(instrArray[0], new RegisgerName_Value<String, Integer>(instrArray[1], null),
+							new RegisgerName_Value<String, Integer>(instrArray[2], null),
+							new RegisgerName_Value<String, Integer>(instrArray[3], null), null, instr);
 					break;
 				case TypesOfOperations.MOVC:
 					if (isNumber(instrArray[2]))
 					{
-						instruction = new Instruction(instrArray[0], new KeyValue<String, Integer>(instrArray[1], null),
+						instruction = new Instruction(instrArray[0], new RegisgerName_Value<String, Integer>(instrArray[1], null),
 								null, null, Integer.parseInt(instrArray[2]), instr);
 					} else
 					{
-						instruction = new Instruction(instrArray[0], new KeyValue<String, Integer>(instrArray[1], null),
-								new KeyValue<String, Integer>(instrArray[2], null), null, null, instr);
+						instruction = new Instruction(instrArray[0], new RegisgerName_Value<String, Integer>(instrArray[1], null),
+								new RegisgerName_Value<String, Integer>(instrArray[2], null), null, null, instr);
 					}
 					break;
 				case TypesOfOperations.MUL:
-					instruction = new Instruction(instrArray[0], new KeyValue<String, Integer>(instrArray[1], null),
-							new KeyValue<String, Integer>(instrArray[2], null),
-							new KeyValue<String, Integer>(instrArray[3], null), null, instr);
+					instruction = new Instruction(instrArray[0], new RegisgerName_Value<String, Integer>(instrArray[1], null),
+							new RegisgerName_Value<String, Integer>(instrArray[2], null),
+							new RegisgerName_Value<String, Integer>(instrArray[3], null), null, instr);
 					break;
 				case TypesOfOperations.AND:
-					instruction = new Instruction(instrArray[0], new KeyValue<String, Integer>(instrArray[1], null),
-							new KeyValue<String, Integer>(instrArray[2], null),
-							new KeyValue<String, Integer>(instrArray[3], null), null, instr);
+					instruction = new Instruction(instrArray[0], new RegisgerName_Value<String, Integer>(instrArray[1], null),
+							new RegisgerName_Value<String, Integer>(instrArray[2], null),
+							new RegisgerName_Value<String, Integer>(instrArray[3], null), null, instr);
 					break;
 				case TypesOfOperations.OR:
-					instruction = new Instruction(instrArray[0], new KeyValue<String, Integer>(instrArray[1], null),
-							new KeyValue<String, Integer>(instrArray[2], null),
-							new KeyValue<String, Integer>(instrArray[3], null), null, instr);
+					instruction = new Instruction(instrArray[0], new RegisgerName_Value<String, Integer>(instrArray[1], null),
+							new RegisgerName_Value<String, Integer>(instrArray[2], null),
+							new RegisgerName_Value<String, Integer>(instrArray[3], null), null, instr);
 					break;
 				case TypesOfOperations.EXOR:
-					instruction = new Instruction(instrArray[0], new KeyValue<String, Integer>(instrArray[1], null),
-							new KeyValue<String, Integer>(instrArray[2], null),
-							new KeyValue<String, Integer>(instrArray[3], null), null, instr);
+					instruction = new Instruction(instrArray[0], new RegisgerName_Value<String, Integer>(instrArray[1], null),
+							new RegisgerName_Value<String, Integer>(instrArray[2], null),
+							new RegisgerName_Value<String, Integer>(instrArray[3], null), null, instr);
 					break;
 				case TypesOfOperations.LOAD:
 					if (isNumber(instrArray[3]))
 					{
-						instruction = new Instruction(instrArray[0], new KeyValue<String, Integer>(instrArray[1], null),
-								new KeyValue<String, Integer>(instrArray[2], null), null,
+						instruction = new Instruction(instrArray[0], new RegisgerName_Value<String, Integer>(instrArray[1], null),
+								new RegisgerName_Value<String, Integer>(instrArray[2], null), null,
 								Integer.parseInt(instrArray[3]), instr);
 					} else
 					{
-						instruction = new Instruction(instrArray[0], new KeyValue<String, Integer>(instrArray[1], null),
-								new KeyValue<String, Integer>(instrArray[2], null),
-								new KeyValue<String, Integer>(instrArray[3], null), null, instr);
+						instruction = new Instruction(instrArray[0], new RegisgerName_Value<String, Integer>(instrArray[1], null),
+								new RegisgerName_Value<String, Integer>(instrArray[2], null),
+								new RegisgerName_Value<String, Integer>(instrArray[3], null), null, instr);
 					}
 					break;
 				case TypesOfOperations.STORE:
 					if (isNumber(instrArray[3]))
 					{
-						instruction = new Instruction(instrArray[0], new KeyValue<String, Integer>(instrArray[1], null),
-								new KeyValue<String, Integer>(instrArray[2], null), null,
+						instruction = new Instruction(instrArray[0], new RegisgerName_Value<String, Integer>(instrArray[1], null),
+								new RegisgerName_Value<String, Integer>(instrArray[2], null), null,
 								Integer.parseInt(instrArray[3]), instr);
 					} else
 					{
-						instruction = new Instruction(instrArray[0], new KeyValue<String, Integer>(instrArray[1], null),
-								new KeyValue<String, Integer>(instrArray[2], null),
-								new KeyValue<String, Integer>(instrArray[3], null), null, instr);
+						instruction = new Instruction(instrArray[0], new RegisgerName_Value<String, Integer>(instrArray[1], null),
+								new RegisgerName_Value<String, Integer>(instrArray[2], null),
+								new RegisgerName_Value<String, Integer>(instrArray[3], null), null, instr);
 					}
 					break;
 				case TypesOfOperations.BZ:
@@ -103,11 +103,11 @@ public class InstrParser
 							instr);
 					break;
 				case TypesOfOperations.JUMP:
-					instruction = new Instruction(instrArray[0], new KeyValue<String, Integer>(instrArray[1], null),
+					instruction = new Instruction(instrArray[0], new RegisgerName_Value<String, Integer>(instrArray[1], null),
 							null, null, Integer.parseInt(instrArray[2]), instr);
 					break;
 				case TypesOfOperations.BAL:
-					instruction = new Instruction(instrArray[0], new KeyValue<String, Integer>(instrArray[1], null),
+					instruction = new Instruction(instrArray[0], new RegisgerName_Value<String, Integer>(instrArray[1], null),
 							null, null, Integer.parseInt(instrArray[2]), instr);
 					break;
 				case TypesOfOperations.HALT:
