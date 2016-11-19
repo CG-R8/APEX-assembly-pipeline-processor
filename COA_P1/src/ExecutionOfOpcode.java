@@ -16,6 +16,12 @@ public class ExecutionOfOpcode
 			case TypesOfOperations.SUB:
 				instruction.setDestination(instruction.getSrc1().getValue() - instruction.getSrc2().getValue());
 				break;
+				case TypesOfOperations.MOVC:
+					if (instruction.getSrc1() != null)
+						instruction.setDestination(instruction.getSrc1().getValue());
+					else
+						instruction.setDestination(instruction.getLiteral());
+					break;
 			case TypesOfOperations.MUL:
 				instruction.setDestination(instruction.getSrc1().getValue() * instruction.getSrc2().getValue());
 				break;
@@ -28,17 +34,13 @@ public class ExecutionOfOpcode
 			case TypesOfOperations.EXOR:
 				instruction.setDestination(instruction.getSrc1().getValue() ^ instruction.getSrc2().getValue());
 				break;
-			// Move literal/ Source value into destination field
-			case TypesOfOperations.MOV:
-			case TypesOfOperations.MOVC:
-				if (instruction.getSrc1() != null)
-					instruction.setDestination(instruction.getSrc1().getValue());
-				else
-					instruction.setDestination(instruction.getLiteral());
-				break;
 
-			// Memory Instruction(Load from memory/ Store in memory)
 			case TypesOfOperations.LOAD:
+				if (instruction.getSrc2() != null)
+					instruction.setMemoryAddress(instruction.getSrc1().getValue() + instruction.getSrc2().getValue());
+				else
+					instruction.setMemoryAddress(instruction.getSrc1().getValue() + instruction.getLiteral());
+				break;
 			case TypesOfOperations.STORE:
 				if (instruction.getSrc2() != null)
 					instruction.setMemoryAddress(instruction.getSrc1().getValue() + instruction.getSrc2().getValue());
