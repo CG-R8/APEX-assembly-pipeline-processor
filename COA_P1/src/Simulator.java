@@ -364,7 +364,7 @@ public class Simulator
 	 */
 	private static void Simulate(int noCycles) throws IOException
 	{
-		for (int i = 1; i < noCycles; i++)
+		for (int i = 1; i <= noCycles; i++)
 		{
 			System.out.println("---------------------------- Cycle : " + i + "--------------------------------");
 			fetchStage();
@@ -431,7 +431,7 @@ public class Simulator
 			while (true)
 			{
 				System.out.println("------------------------------Apex Simulator----------------------------------");
-				System.out.println("1 : Initialize\n2 : Simulate <no_of_cycles>\n3 : Display\n4 : Exit");
+				System.out.println(" 1 : Initialize\n 2 : Simulate \n 3 : Display\n 4 : Exit");
 				scanner = new Scanner(System.in);
 				switch (scanner.nextLine())
 					{
