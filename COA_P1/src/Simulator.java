@@ -619,21 +619,17 @@ public class Simulator
 		if (stages.get("W") != null)
 			System.out.println("--------W----------->" + stages.get("W").getContent());
 
-		// for (Entry<String, Instruction> stage : stages.entrySet()) {
-		// System.out.println(stage.getKey() + " : " +
-		// stage.getValue().getContent());
-		// }
 		System.out.println("\nRegister File: ");
 		for (Entry<String, Integer> register : registerFile.entrySet())
 		{
 			System.out.print(register.getKey() + " : " + register.getValue() + "|\t|");
 		}
-		// System.out.println("\nMemory Address: ");
-		// for(int i=0;i<100; i++){
-		// memoryValues.append(" [" + i + " - " + memory[i] + "] ");
-		// if(i > 0 && i % 10 == 0)
-		// memoryValues.append("\n");
-		// }
+		 System.out.println("\nMemory Address: ");
+		 for(int i=0;i<100; i++){
+		 memoryValues.append(" [" + i + " - " + memory[i] + "] ");
+		 if(i > 0 && i % 10 == 0)
+		 memoryValues.append("\n");
+		 }
 		System.out.println(memoryValues);
 		System.out.println("Special Register X:" + specialRegister);
 	}

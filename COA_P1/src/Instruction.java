@@ -1,5 +1,7 @@
 
 /**
+ * This class have all the details of single instruction
+ * This class also contain all get and set methods for different members of class
  *KeyValue<String, Integer> src1;
  */
 public class Instruction {
@@ -16,7 +18,6 @@ public class Instruction {
 		this.content = "NOP";
 		this.isNOP = true;
 	}
-
 	/**
 	 * @param operation
 	 * @param destination
@@ -73,6 +74,4 @@ public class Instruction {
 	public boolean isNOP(){
 		return this.isNOP;
 	}
-
-
 }

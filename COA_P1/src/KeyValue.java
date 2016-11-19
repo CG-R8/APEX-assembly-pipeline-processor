@@ -1,9 +1,9 @@
 import java.util.Map;
 /**
  * 
- *This is hashmap which stores register details 
- * @param <K> like R0 R1 R2 ...
- * @param <V> like 0,1,2....
+ *This is hashmap class which stores every register's details 
+ * @param <K> keys such as R0 R1 R2 ...
+ * @param <V> values such as 0,1,2....
  */
 final class KeyValue<K, V> implements Map.Entry<K, V> {
     private V regValue;
@@ -27,8 +27,8 @@ final class KeyValue<K, V> implements Map.Entry<K, V> {
 
     @Override
     public V setValue(V value) {
-        V old = this.regValue;
+        V lastValue = this.regValue;
         this.regValue = value;
-        return old;
+        return lastValue;
     }
 }
