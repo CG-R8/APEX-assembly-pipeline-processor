@@ -1,8 +1,17 @@
 
+/**
+ * @author Chetan
+ *
+ */
 public class InstrParser
 {
 
-	// Check if it contains literal value field
+	/**
+	 * This function takes string and return its integer value
+	 * 
+	 * @param any string
+	 * @return number
+	 */
 	private static boolean isNumeric(String str)
 	{
 		try
@@ -15,13 +24,15 @@ public class InstrParser
 		return true;
 	}
 
-	// Parse instruction and return Instruction Object to be passed into
-	// different stages
-
 	/**
-	 * @param instr
-	 * @param pcCounter
-	 * @return
+	 * This function parse every instruction
+	 * <p>
+	 * Creates instruction derived from Instruction class
+	 * 
+	 * @param instruction
+	 * @param Program
+	 *            Counter
+	 * @return instruction
 	 */
 	public Instruction parseInstruction(String instr, int pcCounter)
 	{
@@ -32,18 +43,37 @@ public class InstrParser
 		{
 			switch (instrArray[0])
 				{
-				case TypesOfOperations.ADD: // ADD R2 R2 R5
+				case TypesOfOperations.ADD:
+					instruction = new Instruction(instrArray[0], new KeyValue<String, Integer>(instrArray[1], null),
+							new KeyValue<String, Integer>(instrArray[2], null),
+							new KeyValue<String, Integer>(instrArray[3], null), null, instr);
+					break;
 				case TypesOfOperations.SUB:
+					instruction = new Instruction(instrArray[0], new KeyValue<String, Integer>(instrArray[1], null),
+							new KeyValue<String, Integer>(instrArray[2], null),
+							new KeyValue<String, Integer>(instrArray[3], null), null, instr);
+					break;
 				case TypesOfOperations.MUL:
+					instruction = new Instruction(instrArray[0], new KeyValue<String, Integer>(instrArray[1], null),
+							new KeyValue<String, Integer>(instrArray[2], null),
+							new KeyValue<String, Integer>(instrArray[3], null), null, instr);
+					break;
 				case TypesOfOperations.AND:
+					instruction = new Instruction(instrArray[0], new KeyValue<String, Integer>(instrArray[1], null),
+							new KeyValue<String, Integer>(instrArray[2], null),
+							new KeyValue<String, Integer>(instrArray[3], null), null, instr);
+					break;
 				case TypesOfOperations.OR:
+					instruction = new Instruction(instrArray[0], new KeyValue<String, Integer>(instrArray[1], null),
+							new KeyValue<String, Integer>(instrArray[2], null),
+							new KeyValue<String, Integer>(instrArray[3], null), null, instr);
+					break;
 				case TypesOfOperations.EXOR:
 					instruction = new Instruction(instrArray[0], new KeyValue<String, Integer>(instrArray[1], null),
 							new KeyValue<String, Integer>(instrArray[2], null),
 							new KeyValue<String, Integer>(instrArray[3], null), null, instr);
 					break;
-				case TypesOfOperations.LOAD: // LOAD R5 R2 32
-				case TypesOfOperations.STORE: // STORE R4 R3 20 & STORE R4 R5 R6
+				case TypesOfOperations.LOAD:
 					if (isNumeric(instrArray[3]))
 					{
 						instruction = new Instruction(instrArray[0], new KeyValue<String, Integer>(instrArray[1], null),
@@ -56,8 +86,20 @@ public class InstrParser
 								new KeyValue<String, Integer>(instrArray[3], null), null, instr);
 					}
 					break;
-				case TypesOfOperations.MOVC: // MOVC R1 2
-				case TypesOfOperations.MOV: // MOV R2 R1
+				case TypesOfOperations.STORE:
+					if (isNumeric(instrArray[3]))
+					{
+						instruction = new Instruction(instrArray[0], new KeyValue<String, Integer>(instrArray[1], null),
+								new KeyValue<String, Integer>(instrArray[2], null), null,
+								Integer.parseInt(instrArray[3]), instr);
+					} else
+					{
+						instruction = new Instruction(instrArray[0], new KeyValue<String, Integer>(instrArray[1], null),
+								new KeyValue<String, Integer>(instrArray[2], null),
+								new KeyValue<String, Integer>(instrArray[3], null), null, instr);
+					}
+					break;
+				case TypesOfOperations.MOVC:
 					if (isNumeric(instrArray[2]))
 					{
 						instruction = new Instruction(instrArray[0], new KeyValue<String, Integer>(instrArray[1], null),
@@ -68,17 +110,34 @@ public class InstrParser
 								new KeyValue<String, Integer>(instrArray[2], null), null, null, instr);
 					}
 					break;
-				case TypesOfOperations.BZ: // BZ 4
-				case TypesOfOperations.BNZ: // BNZ -8
+				case TypesOfOperations.MOV:
+					if (isNumeric(instrArray[2]))
+					{
+						instruction = new Instruction(instrArray[0], new KeyValue<String, Integer>(instrArray[1], null),
+								null, null, Integer.parseInt(instrArray[2]), instr);
+					} else
+					{
+						instruction = new Instruction(instrArray[0], new KeyValue<String, Integer>(instrArray[1], null),
+								new KeyValue<String, Integer>(instrArray[2], null), null, null, instr);
+					}
+					break;
+				case TypesOfOperations.BZ:
 					instruction = new Instruction(instrArray[0], null, null, null, Integer.parseInt(instrArray[1]),
 							instr);
 					break;
-				case TypesOfOperations.JUMP: // JUMP R1 20075 & JUMP X 0
-				case TypesOfOperations.BAL: // BAL R7 2
+				case TypesOfOperations.BNZ:
+					instruction = new Instruction(instrArray[0], null, null, null, Integer.parseInt(instrArray[1]),
+							instr);
+					break;
+				case TypesOfOperations.JUMP:
 					instruction = new Instruction(instrArray[0], new KeyValue<String, Integer>(instrArray[1], null),
 							null, null, Integer.parseInt(instrArray[2]), instr);
 					break;
-				case TypesOfOperations.HALT: // HALT
+				case TypesOfOperations.BAL:
+					instruction = new Instruction(instrArray[0], new KeyValue<String, Integer>(instrArray[1], null),
+							null, null, Integer.parseInt(instrArray[2]), instr);
+					break;
+				case TypesOfOperations.HALT:
 					instruction = new Instruction(instrArray[0], null, null, null, null, instr);
 					break;
 				default:
