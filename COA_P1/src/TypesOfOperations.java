@@ -6,7 +6,6 @@
  */
 public final class TypesOfOperations
 {
-
 	public static final String ADD = "ADD";
 	public static final String SUB = "SUB";
 	public static final String MUL = "MUL";

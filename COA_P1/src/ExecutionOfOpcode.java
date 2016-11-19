@@ -14,10 +14,8 @@ public class ExecutionOfOpcode
 	 */
 	public Instruction executeInstruction(Instruction instruction)
 	{
-
 		switch (instruction.getOperation())
 			{
-			// Register to Register Instruction (Source1 and Source2)
 			case TypesOfOperations.ADD:
 				instruction.setDestination(instruction.getSrc1().getValue() + instruction.getSrc2().getValue());
 				break;
@@ -42,7 +40,6 @@ public class ExecutionOfOpcode
 			case TypesOfOperations.EXOR:
 				instruction.setDestination(instruction.getSrc1().getValue() ^ instruction.getSrc2().getValue());
 				break;
-
 			case TypesOfOperations.LOAD:
 				if (instruction.getSrc2() != null)
 					instruction.setMemoryAddress(instruction.getSrc1().getValue() + instruction.getSrc2().getValue());
@@ -63,36 +60,36 @@ public class ExecutionOfOpcode
 	 * This method checks the control flow instruction ans 
 	 * calculate the program counter on the basis of current PC and literal value
 	 * 
-	 * @param instruction
-	 * @param pDestination
+	 * @param branchInstruction
+	 * @param pastDestination
 	 *            previous destination
 	 * @param currentPC
 	 *            program counter
 	 * @param registerValue
-	 * @param specialRegister
+	 * @param xRegister
 	 * @return calculated program counter by adding literal values 
 	 */
-	public Integer predictBranch(Instruction instruction, Integer pDestination, Integer currentPC,
-			Integer registerValue, Integer specialRegister)
+	public Integer predictBranch(Instruction branchInstruction, Integer pastDestination, Integer currentPC,
+			Integer registerValue, Integer xRegister)
 	{
-		switch (instruction.getOperation())
+		switch (branchInstruction.getOperation())
 			{
 			case TypesOfOperations.BNZ:
-				if (pDestination != 0)
-					currentPC = currentPC + instruction.getLiteral() - 8; 
+				if (pastDestination != 0)
+					currentPC = currentPC + branchInstruction.getLiteral() - 8; 
 				break;
 			case TypesOfOperations.BZ:
-				if (pDestination == 0)
-					currentPC = currentPC + instruction.getLiteral() - 8; 
+				if (pastDestination == 0)
+					currentPC = currentPC + branchInstruction.getLiteral() - 8; 
 				break;
 			case TypesOfOperations.JUMP:
-				if (!instruction.getDestination().getKey().equals("X"))
-					currentPC = registerValue + instruction.getLiteral() - 8;
+				if (!branchInstruction.getDestination().getKey().equals("X"))
+					currentPC = registerValue + branchInstruction.getLiteral() - 8;
 				else
-					currentPC = specialRegister + instruction.getLiteral();
+					currentPC = xRegister + branchInstruction.getLiteral();
 				break;
 			case TypesOfOperations.BAL:
-				currentPC = registerValue + instruction.getDestination().getValue();
+				currentPC = registerValue + branchInstruction.getDestination().getValue();
 				break;
 			}
 		return currentPC;
