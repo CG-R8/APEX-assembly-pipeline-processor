@@ -6,94 +6,74 @@
  */
 public class Instruction
 {
+	private String instrOperation;
+	private RegisgerName_Value<String, Integer> instrdestination;
 	private RegisgerName_Value<String, Integer> instrSource1;
 	private RegisgerName_Value<String, Integer> instrSource2;
-	private RegisgerName_Value<String, Integer> instrdestination;
 	private Integer instrLiteral;
 	private Integer instrMemAddress;
 	private String instrContent;
-	private String instrOperation;
 	private boolean isInstrNOP;
 
+	public Instruction()
+	{
+		this.instrContent = "NOP";
+		this.isInstrNOP = true;
+	}
+
 	/**
-	 * This function accept all the possible available values of instruction
-	 * 
 	 * @param operation
-	 *            like ADD SUB MUL
 	 * @param destination
-	 *            Register : hashmap
 	 * @param src1
-	 *            Register : hashmap
 	 * @param src2
-	 *            Register : hashmap
 	 * @param literal
-	 *            valuse : integer
 	 * @param content
-	 *            : instruction as string "ADD R1 R2 R3"
 	 */
 	public Instruction(String operation, RegisgerName_Value<String, Integer> destination, RegisgerName_Value<String, Integer> src1,
 			RegisgerName_Value<String, Integer> src2, Integer literal, String content)
 	{
+		this.instrOperation = operation;
+		this.instrdestination = destination;
 		this.instrSource1 = src1;
 		this.instrSource2 = src2;
-		this.instrdestination = destination;
 		this.instrLiteral = literal;
-		this.instrOperation = operation;
 		this.instrContent = content;
 		this.isInstrNOP = false;
 	}
 
-	/**
-	 * @return instruction as string "ADD R1 R2 R3"
-	 */
 	public String getContent()
 	{
 		return instrContent;
 	}
 
-	/**
-	 * @return type of operation : "ADD"
-	 */
 	public String getOperation()
 	{
 		return this.instrOperation;
 	}
 
-	/**
-	 * @return first source's Register name and value : hashmap
-	 */
+	public Integer getMemoryAddress()
+	{
+		return this.instrMemAddress;
+	}
+
 	public RegisgerName_Value<String, Integer> getSrc1()
 	{
 		return this.instrSource1;
 	}
 
-	/**
-	 * @return second source's Register name and value : hashmap
-	 */
 	public RegisgerName_Value<String, Integer> getSrc2()
 	{
 		return this.instrSource2;
 	}
 
-	public RegisgerName_Value<String, Integer> getDestination()
-	{
-		return this.instrdestination;
-	}
-
-	/**
-	 * @return literal value
-	 */
 	public Integer getLiteral()
 	{
 		return this.instrLiteral;
 	}
 
-	/**
-	 * @return memory address of instruction
-	 */
-	public Integer getMemoryAddress()
+	public RegisgerName_Value<String, Integer> getDestination()
 	{
-		return this.instrMemAddress;
+		return this.instrdestination;
 	}
 
 	public void setSrc1(Integer value)
@@ -116,20 +96,8 @@ public class Instruction
 		this.instrMemAddress = value;
 	}
 
-	/**
-	 * @return flag true : if NOP flag is set
-	 */
 	public boolean isNOP()
 	{
 		return this.isInstrNOP;
-	}
-
-	/**
-	 * Create new instruction with NOP and NOP flag as true
-	 */
-	public Instruction()
-	{
-		this.instrContent = "NOP";
-		this.isInstrNOP = true;
 	}
 }

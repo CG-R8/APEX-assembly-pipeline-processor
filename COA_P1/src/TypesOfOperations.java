@@ -1,8 +1,8 @@
 /**
  *
- *This class is used to declare the variables for different types of operations
- *<p>
- *{@code 	public static final String ADD = "ADD";}
+ * This class is used to declare the variables for different types of operations
+ * <p>
+ * {@code 	public static final String ADD = "ADD";}
  */
 public final class TypesOfOperations
 {

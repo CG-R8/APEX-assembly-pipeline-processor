@@ -1,13 +1,9 @@
 
 /**
- * @author Chetan
  *
  */
 public class InstrParser
 {
-
-
-
 	/**
 	 * This function parse every instruction
 	 * <p>
