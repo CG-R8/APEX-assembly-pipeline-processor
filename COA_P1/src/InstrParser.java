@@ -30,8 +30,7 @@ public class InstrParser
 	 * Creates instruction derived from Instruction class
 	 * 
 	 * @param instruction
-	 * @param Program
-	 *            Counter
+	 * @param Program Counter
 	 * @return instruction
 	 */
 	public Instruction parseInstruction(String instr, int pcCounter)
