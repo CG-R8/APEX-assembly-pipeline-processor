@@ -9,8 +9,7 @@ public class InstrParser
 	/**
 	 * This function takes string and return its integer value
 	 * 
-	 * @param any
-	 *            string
+	 * @param anystring
 	 * @return number
 	 */
 	private static boolean isNumeric(String str)
@@ -111,7 +110,6 @@ public class InstrParser
 								new KeyValue<String, Integer>(instrArray[3], null), null, instr);
 					}
 					break;
-
 				case TypesOfOperations.BZ:
 					instruction = new Instruction(instrArray[0], null, null, null, Integer.parseInt(instrArray[1]),
 							instr);

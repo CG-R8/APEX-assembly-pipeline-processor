@@ -2,8 +2,14 @@
 public class ExecutionOfOpcode
 {
 
-	// In EX stage: Perform Arithmetic operation on input operands and store in
-	// destination field of Instruction Object
+	/**
+	 * Execute current instructions operation by get method and arithematic
+	 * operators. ans sets the value in current instructions destination using
+	 * set method
+	 * 
+	 * @param instruction
+	 * @return
+	 */
 	public Instruction executeInstruction(Instruction instruction)
 	{
 
@@ -16,12 +22,12 @@ public class ExecutionOfOpcode
 			case TypesOfOperations.SUB:
 				instruction.setDestination(instruction.getSrc1().getValue() - instruction.getSrc2().getValue());
 				break;
-				case TypesOfOperations.MOVC:
-					if (instruction.getSrc1() != null)
-						instruction.setDestination(instruction.getSrc1().getValue());
-					else
-						instruction.setDestination(instruction.getLiteral());
-					break;
+			case TypesOfOperations.MOVC:
+				if (instruction.getSrc1() != null)
+					instruction.setDestination(instruction.getSrc1().getValue());
+				else
+					instruction.setDestination(instruction.getLiteral());
+				break;
 			case TypesOfOperations.MUL:
 				instruction.setDestination(instruction.getSrc1().getValue() * instruction.getSrc2().getValue());
 				break;
@@ -52,12 +58,17 @@ public class ExecutionOfOpcode
 	}
 
 	/**
+	 * This method checks the control flow instruction ans 
+	 * calculate the program counter on the basis of current PC and literal value
+	 * 
 	 * @param instruction
 	 * @param pDestination
+	 *            previous destination
 	 * @param currentPC
+	 *            program counter
 	 * @param registerValue
 	 * @param specialRegister
-	 * @return
+	 * @return calculated program counter by adding literal values 
 	 */
 	public Integer predictBranch(Instruction instruction, Integer pDestination, Integer currentPC,
 			Integer registerValue, Integer specialRegister)
