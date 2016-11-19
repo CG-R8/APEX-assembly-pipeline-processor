@@ -3,6 +3,49 @@ public class ExecutionOfOpcode
 {
 
 	/**
+	 * This method checks the control flow instruction and calculate the program
+	 * counter on the basis of current PC and literal value
+	 * <p>
+	 * Special case for "X" register which sets when "BAL" instruction executed
+	 * 
+	 * @param branchInstruction
+	 * @param pastDestination
+	 *            previous destination
+	 * @param currentPC
+	 *            program counter
+	 * @param registerValue
+	 * @param xRegister
+	 * @return calculated program counter by adding literal values
+	 */
+	public Integer evaluateBranchInstr(Instruction branchInstruction, Integer pastDestination, Integer currentPC,
+			Integer registerValue, Integer xRegister)
+	{
+		Integer branchLiteral = branchInstruction.getLiteral();
+		switch (branchInstruction.getOperation())
+			{
+			case TypesOfOperations.BAL:
+				currentPC = registerValue + branchInstruction.getDestination().getValue();
+				break;
+			case TypesOfOperations.JUMP:
+				if (!branchInstruction.getDestination().getKey().equals("X"))
+					currentPC = registerValue + branchLiteral - 8;
+				else
+					currentPC = xRegister + branchLiteral;
+				break;
+			case TypesOfOperations.BZ:
+				if (pastDestination == 0)
+					currentPC = currentPC + branchLiteral - 8;
+				break;
+			case TypesOfOperations.BNZ:
+				if (pastDestination != 0)
+					currentPC = currentPC + branchLiteral - 8;
+				break;
+
+			}
+		return currentPC;
+	}
+
+	/**
 	 * Execute current instructions operation by get method and arithmetic
 	 * operators. and sets the value in current instructions destination using
 	 * set method.
@@ -56,44 +99,4 @@ public class ExecutionOfOpcode
 		return instruction;
 	}
 
-	/**
-	 * This method checks the control flow instruction and
-	 * calculate the program counter on the basis of current PC and literal value
-	 * <p>
-	 * Special case for "X" register which sets when "BAL" instruction executed
-	 * @param branchInstruction
-	 * @param pastDestination
-	 *            previous destination
-	 * @param currentPC
-	 *            program counter
-	 * @param registerValue
-	 * @param xRegister
-	 * @return calculated program counter by adding literal values 
-	 */
-	public Integer predictBranch(Instruction branchInstruction, Integer pastDestination, Integer currentPC,
-			Integer registerValue, Integer xRegister)
-	{
-		Integer branchLiteral = branchInstruction.getLiteral();
-		switch (branchInstruction.getOperation())
-			{
-			case TypesOfOperations.BNZ:
-				if (pastDestination != 0)
-					currentPC = currentPC + branchLiteral - 8; 
-				break;
-			case TypesOfOperations.BZ:
-				if (pastDestination == 0)
-					currentPC = currentPC + branchLiteral - 8; 
-				break;
-			case TypesOfOperations.JUMP:
-				if (!branchInstruction.getDestination().getKey().equals("X"))
-					currentPC = registerValue + branchLiteral - 8;
-				else
-					currentPC = xRegister + branchLiteral;
-				break;
-			case TypesOfOperations.BAL:
-				currentPC = registerValue + branchInstruction.getDestination().getValue();
-				break;
-			}
-		return currentPC;
-	}
 }
