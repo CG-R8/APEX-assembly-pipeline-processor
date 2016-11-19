@@ -273,9 +273,12 @@ public class Simulator
 		}
 	}
 
-	// Decode Stage - Read value from register file and store values in SRC1 and
-	// SRC2
 
+	/**
+	 * This function decodes the instruction
+	 * <p>
+	 * This function also set flag for source is valid or not
+	 */
 	private static void decodeInstruction()
 	{
 		if (isValidSource)
