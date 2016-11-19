@@ -2,14 +2,14 @@
 /**
  *
  */
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.util.HashMap;
 import java.util.Map;
+import java.util.HashMap;
 import java.util.Map.Entry;
 import java.util.Scanner;
 import java.util.stream.Stream;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 
 public class Simulator
 {
@@ -33,7 +33,6 @@ public class Simulator
 	 * @return instruction
 	 * @throws IOException
 	 */
-	@SuppressWarnings("resource")
 	private static String getContent() throws IOException
 	{
 		String instr = "";
@@ -115,15 +114,11 @@ public class Simulator
 		if (src1 != null)
 		{
 			isSrc1Valid = checkFlowDependencies(src1, "E");
-			// && checkFlowDependencies(src1, "E2") &&
-			// checkFlowDependencies(src1, "M");
 			instruction.setSrc1(readRegister(src1));
 		}
 		if (src2 != null)
 		{
 			isSrc2Valid = checkFlowDependencies(src2, "E");
-			// && checkFlowDependencies(src2, "E2") &&
-			// checkFlowDependencies(src2, "M");
 			instruction.setSrc2(readRegister(src2));
 		}
 		if (instruction.getOperation().equals(TypesOfOperations.BAL))
@@ -135,7 +130,7 @@ public class Simulator
 		{
 			isDestValid = checkFlowDependencies(destination, "E") && checkFlowDependencies(destination, "E2")
 					&& checkFlowDependencies(destination, "M");
-			if (!isDestValid)// there is dependancy for store register
+			if (!isDestValid)
 			{
 				isDestValid = true;
 				instruction.setDestination(-1);
@@ -146,7 +141,7 @@ public class Simulator
 			isSourceValid = isSrc1Valid && isSrc2Valid && isDestValid;
 			return instruction;
 		}
-		isSourceValid = isSrc1Valid && isSrc2Valid&&isBalValid;
+		isSourceValid = isSrc1Valid && isSrc2Valid && isBalValid;
 		return instruction;
 	}
 
@@ -169,20 +164,18 @@ public class Simulator
 	private static boolean checkFlowDependencies(KeyValue<String, Integer> src, String stage)
 	{
 		boolean isDependent = true;
-		
+
 		try
 		{
-			isDependent=stages.containsKey(stage) && stages.get(stage).getOperation() != null
+			isDependent = stages.containsKey(stage) && stages.get(stage).getOperation() != null
 			// If instruction is not STORE
 					&& !stages.get(stage).getOperation().equals(TypesOfOperations.STORE)
 					// If destination of instruction is not NULL
 					&& stages.get(stage).getDestination() != null
 					// If there is same Register in both instruction
 					&& stages.get(stage).getDestination().getKey().equals(src.getKey());
-			//TODO what if the branch is dependent 
-			
-			
-			
+			// TODO what if the branch is dependent
+
 			return !(isDependent);
 		} catch (Exception e)
 		{
@@ -193,9 +186,12 @@ public class Simulator
 		return true;
 	}
 
-	// Perform memory operation in LOAD STORE operation(Store value in memory in
-	// case of STORE and
-	// Read value from memory into destination in case of LOAD instruction)
+	/**
+	 * To process LOAD and STORE operations
+	 * 
+	 * @param instruction
+	 * @return
+	 */
 	private static Instruction performMemoryOperation(Instruction instruction)
 	{
 		try
@@ -285,8 +281,6 @@ public class Simulator
 		{
 			if (latches.containsKey("F") && !latches.get("F").isNOP())
 			{
-				// find the Fetch instruction and pass it to the
-				// getSRCFromRegister
 				try
 				{
 					latches.put("F", getSRCFromRegister(latches.get("F")));
@@ -295,17 +289,14 @@ public class Simulator
 					System.err.println("Error while reading values from Registers in Decode function");
 					e.printStackTrace();
 				}
-				// moveInstruction("D", "F");
 			}
 			moveInstruction("D", "F");
 		} else
 		{
-			latches.put("D", new Instruction());// Add NOP in latch for the next
-												// Stage to consume
+			latches.put("D", new Instruction());
 		}
 	}
 
-	// Execute Instruction based on operation
 	private static void executeInstruction()
 	{
 		Integer registerVal = 0;
@@ -378,14 +369,9 @@ public class Simulator
 		String controlFlowInstruction = TypesOfOperations.BNZ + "|" + TypesOfOperations.BZ + "|"
 				+ TypesOfOperations.JUMP + "|" + TypesOfOperations.BAL + "|" + TypesOfOperations.HALT;
 
-		
-		
-		
 		Instruction branchInstr = new Instruction();
 		branchInstr = latches.get("D");
-		
-		
-		
+
 		if (latches.containsKey("D"))
 		{
 			if (!latches.get("D").isNOP())
@@ -419,35 +405,24 @@ public class Simulator
 		{
 			if (!latches.get("D").isNOP() && controlFlowInstruction.contains(latches.get("D").getOperation()))
 			{
-				
-				
-				System.out.println("================Forwarding 1 : "+forwardingReg.getKey()+" value : "+forwardingReg.getValue());
-				System.out.println("================Forwarding from Mem : "+forwardingRegMEMtoEX.getKey()+" Value :  "+forwardingRegMEMtoEX.getValue());
-				
-				
 				if ((forwardingReg != null) && (forwardingRegMEMtoEX != null)
 						&& forwardingReg.getKey().equals(forwardingRegMEMtoEX.getKey()))
 				{
-					System.out.println("======================same==========================================");
 					forwardingRegMEMtoEX.setValue(forwardingReg.getValue());
 				}
-
 				if ((branchInstr.getDestination() != null)
 						&& (branchInstr.getDestination().getKey().equals(forwardingReg.getKey())))
 					branchInstr.setDestination(forwardingReg.getValue());
 				if ((branchInstr.getDestination() != null)
 						&& (branchInstr.getDestination().getKey().equals(forwardingRegMEMtoEX.getKey())))
 				{
-					System.out.println("================================================================");
 					branchInstr.setDestination(forwardingRegMEMtoEX.getValue());
 				}
-					
-				
 				if (latches.get("D").getOperation().equals(TypesOfOperations.BAL))
 				{
 					specialRegister = currentPC - 4;
 				}
-				registerVal=latches.get("D").getLiteral();
+				registerVal = latches.get("D").getLiteral();
 				if (latches.get("D").getDestination() != null
 						&& registerFile.containsKey(latches.get("D").getDestination().getKey()))
 				{
@@ -474,12 +449,11 @@ public class Simulator
 					currentPC = currentPC - 4;
 				}
 			}
-			}
+		}
 	}
 
 	private static void delayStage()
 	{
-
 		if (latches.containsKey("B1"))
 		{
 			if (stages.containsKey("Dly"))
@@ -491,10 +465,8 @@ public class Simulator
 		} else
 		{
 			// latches.put("B", branchDelayMethod(latches.get("B")));
-
 			stages.put("Dly", new Instruction());
 		}
-		// moveInstruction("Bd", "B");
 	}
 
 	private static void executeInstruction2()
@@ -509,9 +481,7 @@ public class Simulator
 			moveInstruction("E2", "E");
 		} else
 		{
-			latches.put("E2", new Instruction());// Add NOP in latch for the
-													// next
-													// Stage to consume
+			latches.put("E2", new Instruction());
 		}
 	}
 
@@ -522,21 +492,16 @@ public class Simulator
 		if (!controlFlowInstruction.contains(instruction.getOperation()))
 			if (latches.containsKey("E"))
 			{
-				System.out.println(">>>>>>>Recent calculated value>>" + instruction.getDestination().getValue());
-
 				forwardingReg = instruction.getDestination();
-
 			}
 		return instruction;
 	}
 
 	private static Instruction branchDelayMethod(Instruction instruction)
 	{
-
 		return instruction;
 	}
 
-	// Memory Operation
 	private static void memory()
 	{
 		if (latches.containsKey("Dly") && !latches.get("Dly").isNOP())
@@ -551,17 +516,12 @@ public class Simulator
 					latches.put("E2", performMemoryOperation(latches.get("E2")));
 					// TODO mem to EX forwarding
 					forwardingRegMEMtoEX = latches.get("E2").getDestination();
-					System.out.println(">>>>>>>MEM>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>" + forwardingRegMEMtoEX.getValue());
-
 				}
-
 				moveInstruction("M", "E2");
-
 			}
 		}
 	}
 
-	// Write back in register file
 	private static void writeback()
 	{
 		String controlFlowInstruction = TypesOfOperations.BNZ + "|" + TypesOfOperations.BZ + "|"
@@ -587,9 +547,8 @@ public class Simulator
 		}
 	}
 
-	// Sets default value
 	/**
-	 * Initialise the current pc , filepointer Create registerFile = new
+	 * Initialize the current pc , filepointer Create registerFile = new
 	 * HashMap<String, Integer>() stages = new HashMap<String, Instruction>();
 	 * latches = new HashMap<String, Instruction>(); specialRegister = 0;
 	 * stopExecution = false; isSourceValid = true;
@@ -607,7 +566,11 @@ public class Simulator
 		isSourceValid = true;
 	}
 
-	// Simulate instructions for n cycle
+	/**
+	 * Main for LOOP which simulate 'n' no. of cycles
+	 * @param n : number of cycles
+	 * @throws IOException
+	 */
 	private static void Simulate(int n) throws IOException
 	{
 		for (int i = 1; i < n; i++)
@@ -627,13 +590,14 @@ public class Simulator
 			writeback();
 			Display();
 			System.out.println("---------------------------------------------------------");
-
 			if (stopExecution)
 				break;
 		}
 	}
 
-	// Display Result at the end of n cycle
+	/**
+	 * Displays the output of current instruction cycle
+	 */
 	private static void Display()
 	{
 		StringBuilder memoryValues = new StringBuilder();
@@ -671,7 +635,7 @@ public class Simulator
 		// memoryValues.append("\n");
 		// }
 		System.out.println(memoryValues);
-		System.out.println("X:" + specialRegister);
+		System.out.println("Special Register X:" + specialRegister);
 	}
 
 	public static void main(String[] args)
@@ -683,7 +647,8 @@ public class Simulator
 			String input = null;
 			// while (true)
 			{
-				System.out.println("-------------Input-----------\nInitialize\nSimulate <n>\nDisplay");
+				System.out.println("-------------Apex Simulator-----------");
+				System.out.println("1 : Initialize\n2 : Simulate <n>\n3 : Display");
 				// input = scanner.nextLine();
 				switch ("S")
 					{
@@ -691,7 +656,6 @@ public class Simulator
 						Initialize();
 						break;
 					case "S":
-
 						Initialize();
 						Simulate(Integer.parseInt("400"));
 						break;
