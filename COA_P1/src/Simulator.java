@@ -50,6 +50,7 @@ public class Simulator
 
 		} catch (Exception ex)
 		{
+//			ex.printStackTrace();
 		}
 		return instr;
 	}
@@ -190,7 +191,7 @@ public class Simulator
 	 * To process LOAD and STORE operations
 	 * 
 	 * @param instruction
-	 * @return
+	 * @return instruction
 	 */
 	private static Instruction performMemoryOperation(Instruction instruction)
 	{
