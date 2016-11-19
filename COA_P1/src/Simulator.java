@@ -133,22 +133,12 @@ public class Simulator
 		}
 		if (instruction.getOperation().equals(TypesOfOperations.STORE))
 		{
-			// TODO I dont think there is any requirement to check store 's
-			// dependancy
-			// isDestValid = checkFlowDependencies(destination, "E");
-			// TODO we need forwarding from STORE
-			// && checkFlowDependencies(destination, "M")&&
-			// checkFlowDependencies(destination, "E2");
-
-			// TODO If this wont match, it means for STORE the register required
-			// is not yet in RegisterFile
 			isDestValid = checkFlowDependencies(destination, "E") && checkFlowDependencies(destination, "E2")
 					&& checkFlowDependencies(destination, "M");
 			if (!isDestValid)// there is dependancy for store register
 			{
 				isDestValid = true;
 				instruction.setDestination(-1);
-				;
 			} else
 			{
 				instruction.setDestination(readRegister(destination));
@@ -339,7 +329,6 @@ public class Simulator
 					if ((forwardingReg != null) && (forwardingRegMEMtoEX != null)
 							&& forwardingReg.getKey().equals(forwardingRegMEMtoEX.getKey()))
 					{
-						System.out.println("======================same==========================================");
 						forwardingRegMEMtoEX.setValue(forwardingReg.getValue());
 					}
 
@@ -352,13 +341,11 @@ public class Simulator
 					if ((instructionEx.getSrc1() != null)
 							&& (instructionEx.getSrc1().getKey().equals(forwardingRegMEMtoEX.getKey())))
 					{
-						System.out.println("================================================================");
 						instructionEx.setSrc1(forwardingRegMEMtoEX.getValue());
 					}
 					if ((instructionEx.getSrc2() != null)
 							&& (instructionEx.getSrc2().getKey().equals(forwardingRegMEMtoEX.getKey())))
 					{
-						System.out.println("================================================================");
 
 						instructionEx.setSrc2(forwardingRegMEMtoEX.getValue());
 					}
