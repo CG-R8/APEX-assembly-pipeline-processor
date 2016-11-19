@@ -13,15 +13,16 @@ import java.nio.file.Paths;
 
 public class Simulator
 {
-	static int currentFilePointer;
+	
 	static int currentPC;
+	static int currentFilePointer;
 	static int[] memory;
-	static Map<String, Integer> registerFile;
 	static Map<String, Instruction> stages;
 	static Map<String, Instruction> latches;
+	static Map<String, Integer> registerFile;
 	static int specialRegister;
-	static boolean stopExecution;
-	static boolean isSourceValid;
+	static boolean isComplete;
+	static boolean isValidSource;
 	static public KeyValue<String, Integer> forwardingReg = null;
 	static public KeyValue<String, Integer> forwardingRegMEMtoEX = null;
 
@@ -39,7 +40,6 @@ public class Simulator
 		try
 		{
 			Stream<String> lines = Files.lines(Paths.get("input.txt"));
-
 			instr = lines.skip(currentFilePointer).findFirst().get();
 			instr = instr.replaceAll("#", "");
 			instr = instr.replaceAll(",", "");
@@ -138,10 +138,10 @@ public class Simulator
 			{
 				instruction.setDestination(readRegister(destination));
 			}
-			isSourceValid = isSrc1Valid && isSrc2Valid && isDestValid;
+			isValidSource = isSrc1Valid && isSrc2Valid && isDestValid;
 			return instruction;
 		}
-		isSourceValid = isSrc1Valid && isSrc2Valid && isBalValid;
+		isValidSource = isSrc1Valid && isSrc2Valid && isBalValid;
 		return instruction;
 	}
 
@@ -252,7 +252,7 @@ public class Simulator
 		{
 			stages.put("D", getSRCFromRegister(stages.get("D")));
 		}
-		if (isSourceValid)
+		if (isValidSource)
 		{
 			Instruction instruction;
 			try
@@ -277,7 +277,7 @@ public class Simulator
 
 	private static void decodeInstruction()
 	{
-		if (isSourceValid)
+		if (isValidSource)
 		{
 			if (latches.containsKey("F") && !latches.get("F").isNOP())
 			{
@@ -542,7 +542,7 @@ public class Simulator
 			}
 			if (stages.get("W").getOperation().equals(TypesOfOperations.HALT))
 			{
-				stopExecution = true;
+				isComplete = true;
 			}
 		}
 	}
@@ -562,8 +562,8 @@ public class Simulator
 		stages = new HashMap<String, Instruction>();
 		latches = new HashMap<String, Instruction>();
 		specialRegister = 0;
-		stopExecution = false;
-		isSourceValid = true;
+		isComplete = false;
+		isValidSource = true;
 	}
 
 	/**
@@ -590,7 +590,7 @@ public class Simulator
 			writeback();
 			Display();
 			System.out.println("---------------------------------------------------------");
-			if (stopExecution)
+			if (isComplete)
 				break;
 		}
 	}
