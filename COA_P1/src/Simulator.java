@@ -16,15 +16,15 @@ public class Simulator
 
 	static int currentPC;
 	static int currentFilePointer;
-	static int[] memory;
+	static int[] memoryBlocks;
 	static Map<String, Instruction> stages;
 	static Map<String, Instruction> latches;
 	static Map<String, Integer> registerFile;
 	static int specialRegister;
 	static boolean isComplete;
 	static boolean isValidSource;
-	static public KeyValue<String, Integer> forwardingReg = null;
-	static public KeyValue<String, Integer> forwardingRegMEMtoEX = null;
+	static public RegisgerName_Value<String, Integer> forwardingReg = null;
+	static public RegisgerName_Value<String, Integer> forwardingRegMEMtoEX = null;
 
 	/**
 	 * Fetch stage: Check current instruction in Decode stage is present and is
@@ -325,7 +325,7 @@ public class Simulator
 			if (!controlFlowInstruction.contains(stages.get("W").getOperation())
 					&& !stages.get("W").getOperation().equals(TypesOfOperations.STORE))
 			{
-				KeyValue<String, Integer> destinationReg = stages.get("W").getDestination();
+				RegisgerName_Value<String, Integer> destinationReg = stages.get("W").getDestination();
 				registerFile.put(destinationReg.getKey(), destinationReg.getValue());
 			}
 			if (stages.get("W").getOperation().equals(TypesOfOperations.HALT))
@@ -345,7 +345,7 @@ public class Simulator
 	{
 		currentPC = 3996;
 		currentFilePointer = 0;
-		memory = new int[4000];
+		memoryBlocks = new int[4000];
 		registerFile = new HashMap<String, Integer>();
 		stages = new HashMap<String, Instruction>();
 		latches = new HashMap<String, Instruction>();
@@ -415,7 +415,7 @@ public class Simulator
 		System.out.println("\n0 to 99 Memory Address Details: ");
 		for (int i = 0; i < 100; i++)
 		{
-			memoryValues.append(" [" + i + " - " + memory[i] + "] ");
+			memoryValues.append(" [" + i + " - " + memoryBlocks[i] + "] ");
 			if (i > 0 && i % 10 == 0)
 				memoryValues.append("\n");
 		}
@@ -518,7 +518,7 @@ public class Simulator
 	 * @param pair
 	 * @return value of register
 	 */
-	private static Integer readRegister(KeyValue<String, Integer> pair)
+	private static Integer readRegister(RegisgerName_Value<String, Integer> pair)
 	{
 		if (pair != null && registerFile.containsKey(pair.getKey()))
 		{
@@ -538,9 +538,9 @@ public class Simulator
 
 	private static Instruction getSRCFromRegister(Instruction instruction)
 	{
-		KeyValue<String, Integer> src1 = instruction.getSrc1();
-		KeyValue<String, Integer> src2 = instruction.getSrc2();
-		KeyValue<String, Integer> destination = instruction.getDestination();
+		RegisgerName_Value<String, Integer> src1 = instruction.getSrc1();
+		RegisgerName_Value<String, Integer> src2 = instruction.getSrc2();
+		RegisgerName_Value<String, Integer> destination = instruction.getDestination();
 		boolean isSrc1Valid = true, isSrc2Valid = true, isDestValid = true;
 		boolean isBalValid = true;
 
@@ -594,7 +594,7 @@ public class Simulator
 	 * @return True -if dependencies else false
 	 * 
 	 */
-	private static boolean checkFlowDependencies(KeyValue<String, Integer> src, String stage)
+	private static boolean checkFlowDependencies(RegisgerName_Value<String, Integer> src, String stage)
 	{
 		boolean isDependent = true;
 
@@ -644,11 +644,11 @@ public class Simulator
 				{
 					instruction.setDestination(readRegister(instruction.getDestination()));
 				}
-				memory[instruction.getMemoryAddress()] = instruction.getDestination().getValue();
+				memoryBlocks[instruction.getMemoryAddress()] = instruction.getDestination().getValue();
 			}
 			if (instruction.getOperation() != null && instruction.getOperation().equals(TypesOfOperations.LOAD))
 			{
-				instruction.setDestination(memory[instruction.getMemoryAddress()]);
+				instruction.setDestination(memoryBlocks[instruction.getMemoryAddress()]);
 
 			}
 		} catch (Exception e)
