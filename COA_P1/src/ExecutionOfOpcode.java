@@ -57,9 +57,10 @@ public class ExecutionOfOpcode
 	}
 
 	/**
-	 * This method checks the control flow instruction ans 
+	 * This method checks the control flow instruction and
 	 * calculate the program counter on the basis of current PC and literal value
-	 * 
+	 * <p>
+	 * Special case for "X" register which sets when "BAL" instruction executed
 	 * @param branchInstruction
 	 * @param pastDestination
 	 *            previous destination
@@ -72,21 +73,22 @@ public class ExecutionOfOpcode
 	public Integer predictBranch(Instruction branchInstruction, Integer pastDestination, Integer currentPC,
 			Integer registerValue, Integer xRegister)
 	{
+		Integer branchLiteral = branchInstruction.getLiteral();
 		switch (branchInstruction.getOperation())
 			{
 			case TypesOfOperations.BNZ:
 				if (pastDestination != 0)
-					currentPC = currentPC + branchInstruction.getLiteral() - 8; 
+					currentPC = currentPC + branchLiteral - 8; 
 				break;
 			case TypesOfOperations.BZ:
 				if (pastDestination == 0)
-					currentPC = currentPC + branchInstruction.getLiteral() - 8; 
+					currentPC = currentPC + branchLiteral - 8; 
 				break;
 			case TypesOfOperations.JUMP:
 				if (!branchInstruction.getDestination().getKey().equals("X"))
-					currentPC = registerValue + branchInstruction.getLiteral() - 8;
+					currentPC = registerValue + branchLiteral - 8;
 				else
-					currentPC = xRegister + branchInstruction.getLiteral();
+					currentPC = xRegister + branchLiteral;
 				break;
 			case TypesOfOperations.BAL:
 				currentPC = registerValue + branchInstruction.getDestination().getValue();

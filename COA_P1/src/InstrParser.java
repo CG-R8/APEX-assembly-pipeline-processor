@@ -6,23 +6,7 @@
 public class InstrParser
 {
 
-	/**
-	 * This function takes string and return its integer value
-	 * 
-	 * @param anystring
-	 * @return number
-	 */
-	private static boolean isNumeric(String str)
-	{
-		try
-		{
-			Integer.parseInt(str);
-		} catch (NumberFormatException nfe)
-		{
-			return false;
-		}
-		return true;
-	}
+
 
 	/**
 	 * This function parse every instruction
@@ -54,7 +38,7 @@ public class InstrParser
 							new KeyValue<String, Integer>(instrArray[3], null), null, instr);
 					break;
 				case TypesOfOperations.MOVC:
-					if (isNumeric(instrArray[2]))
+					if (isNumber(instrArray[2]))
 					{
 						instruction = new Instruction(instrArray[0], new KeyValue<String, Integer>(instrArray[1], null),
 								null, null, Integer.parseInt(instrArray[2]), instr);
@@ -85,7 +69,7 @@ public class InstrParser
 							new KeyValue<String, Integer>(instrArray[3], null), null, instr);
 					break;
 				case TypesOfOperations.LOAD:
-					if (isNumeric(instrArray[3]))
+					if (isNumber(instrArray[3]))
 					{
 						instruction = new Instruction(instrArray[0], new KeyValue<String, Integer>(instrArray[1], null),
 								new KeyValue<String, Integer>(instrArray[2], null), null,
@@ -98,7 +82,7 @@ public class InstrParser
 					}
 					break;
 				case TypesOfOperations.STORE:
-					if (isNumeric(instrArray[3]))
+					if (isNumber(instrArray[3]))
 					{
 						instruction = new Instruction(instrArray[0], new KeyValue<String, Integer>(instrArray[1], null),
 								new KeyValue<String, Integer>(instrArray[2], null), null,
@@ -139,5 +123,24 @@ public class InstrParser
 		}
 		return instruction;
 
+	}
+	
+	
+	/**
+	 * This function takes string and return its integer value
+	 * 
+	 * @param anystring
+	 * @return number
+	 */
+	private static boolean isNumber(String str)
+	{
+		try
+		{
+			Integer.parseInt(str);
+		} catch (NumberFormatException ex)
+		{
+			return false;
+		}
+		return true;
 	}
 }
