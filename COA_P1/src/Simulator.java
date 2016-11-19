@@ -90,8 +90,6 @@ public class Simulator
 
 	private static void execute1()
 	{
-		Integer registerVal = 0;
-		Integer dest = null;
 		boolean flushRegisterValues = false;
 		boolean branchFUflag = false;
 		ExecutionOfOpcode functionUnit = new ExecutionOfOpcode();
@@ -392,7 +390,7 @@ public class Simulator
 		StringBuilder memoryValues = new StringBuilder();
 		System.out.println("\nPipleline Stages: ");
 		if (stages.get("F") != null)
-		System.out.println("--------Fetch-----------> " + stages.get("F").getContent());
+			System.out.println("--------Fetch-----------> " + stages.get("F").getContent());
 		if (stages.get("D") != null)
 			System.out.println("--------Decode----------> " + stages.get("D").getContent());
 		if (stages.get("E") != null)
@@ -433,7 +431,7 @@ public class Simulator
 			while (true)
 			{
 				System.out.println("------------------------------Apex Simulator----------------------------------");
-				System.out.println("1 : Initialize\n2 : Simulate <no_of_cycles>\n3 : Display");
+				System.out.println("1 : Initialize\n2 : Simulate <no_of_cycles>\n3 : Display\n4 : Exit");
 				scanner = new Scanner(System.in);
 				switch (scanner.nextLine())
 					{
@@ -448,6 +446,8 @@ public class Simulator
 					case "3":
 						Display();
 						break;
+					case "4":
+						System.exit(0);;
 					}
 			}
 		} catch (Exception ex)
@@ -455,7 +455,7 @@ public class Simulator
 			ex.printStackTrace();
 		} finally
 		{
-				scanner.close();
+			scanner.close();
 		}
 	}
 
@@ -478,8 +478,7 @@ public class Simulator
 			instr = instr.replaceAll(",", "");
 			currentFilePointer++;
 			currentPC = currentPC + 4;
-			System.out.println("******************" + instr + "***********************");
-			System.out.println("****************" + currentPC + "*****************");
+			System.out.println("-------------------------Instruction Address : " + currentPC + "------------------------");
 
 		} catch (Exception ex)
 		{
