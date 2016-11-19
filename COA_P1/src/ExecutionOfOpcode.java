@@ -3,12 +3,14 @@ public class ExecutionOfOpcode
 {
 
 	/**
-	 * Execute current instructions operation by get method and arithematic
-	 * operators. ans sets the value in current instructions destination using
-	 * set method
+	 * Execute current instructions operation by get method and arithmetic
+	 * operators. and sets the value in current instructions destination using
+	 * set method.
+	 * <p>
+	 * Also perform addition for LOAD and STORE memory addresses
 	 * 
 	 * @param instruction
-	 * @return
+	 * @return instruction with calculated result
 	 */
 	public Instruction executeInstruction(Instruction instruction)
 	{
@@ -75,28 +77,21 @@ public class ExecutionOfOpcode
 	{
 		switch (instruction.getOperation())
 			{
-			// Control Flow Instruction(Conditional/ unconditional jump
-			// instruction)
 			case TypesOfOperations.BNZ:
 				if (pDestination != 0)
-					currentPC = currentPC + instruction.getLiteral() - 8; // Relative
-																			// address
+					currentPC = currentPC + instruction.getLiteral() - 8; 
 				break;
 			case TypesOfOperations.BZ:
 				if (pDestination == 0)
-					currentPC = currentPC + instruction.getLiteral() - 8; // Relative
-																			// address
+					currentPC = currentPC + instruction.getLiteral() - 8; 
 				break;
 			case TypesOfOperations.JUMP:
-				// X is Special register used to store next PC address in case
-				// of BAL instruction
 				if (!instruction.getDestination().getKey().equals("X"))
 					currentPC = registerValue + instruction.getLiteral() - 8;
 				else
 					currentPC = specialRegister + instruction.getLiteral();
 				break;
 			case TypesOfOperations.BAL:
-
 				currentPC = registerValue + instruction.getDestination().getValue();
 				break;
 			}

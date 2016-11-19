@@ -1,23 +1,26 @@
 
 /**
- * This class have all the details of single instruction
- * This class also contain all get and set methods for different members of class
- *KeyValue<String, Integer> src1;
+ * This class have all the details of single instruction This class also contain
+ * all get and set methods for different members of class KeyValue<String,
+ * Integer> src1;
  */
-public class Instruction {
-	private String operation;
-	private KeyValue<String, Integer> destination;
-	private KeyValue<String, Integer> src1;
-	private KeyValue<String, Integer> src2;
-	private Integer literal;
-	private Integer memAddress;
-	private String content;
-	private boolean isNOP;
+public class Instruction
+{
+	private String instrOperation;
+	private KeyValue<String, Integer> instrdestination;
+	private KeyValue<String, Integer> instrSource1;
+	private KeyValue<String, Integer> instrSource2;
+	private Integer instrLiteral;
+	private Integer instrMemAddress;
+	private String instrContent;
+	private boolean isInstrNOP;
 
-	public Instruction(){
-		this.content = "NOP";
-		this.isNOP = true;
+	public Instruction()
+	{
+		this.instrContent = "NOP";
+		this.isInstrNOP = true;
 	}
+
 	/**
 	 * @param operation
 	 * @param destination
@@ -26,52 +29,75 @@ public class Instruction {
 	 * @param literal
 	 * @param content
 	 */
-	public Instruction(String operation,
-			KeyValue<String, Integer> destination,
-			KeyValue<String, Integer> src1, KeyValue<String, Integer> src2,
-			Integer literal, String content) {
-		this.operation = operation;
-		this.destination = destination;
-		this.src1 = src1;
-		this.src2 = src2;
-		this.literal = literal;
-		this.content = content;
-		this.isNOP = false;
+	public Instruction(String operation, KeyValue<String, Integer> destination, KeyValue<String, Integer> src1,
+			KeyValue<String, Integer> src2, Integer literal, String content)
+	{
+		this.instrOperation = operation;
+		this.instrdestination = destination;
+		this.instrSource1 = src1;
+		this.instrSource2 = src2;
+		this.instrLiteral = literal;
+		this.instrContent = content;
+		this.isInstrNOP = false;
 	}
-	public String getContent(){
-		return content;
-	}	
-	public String getOperation(){
-		return this.operation;
+
+	public String getContent()
+	{
+		return instrContent;
 	}
-	public Integer getMemoryAddress(){
-		return this.memAddress;
+
+	public String getOperation()
+	{
+		return this.instrOperation;
 	}
-	public KeyValue<String, Integer> getSrc1(){
-		return this.src1;	
+
+	public Integer getMemoryAddress()
+	{
+		return this.instrMemAddress;
 	}
-	public KeyValue<String, Integer> getSrc2(){
-		return this.src2;	
+
+	public KeyValue<String, Integer> getSrc1()
+	{
+		return this.instrSource1;
 	}
-	public Integer getLiteral(){
-		return this.literal;
+
+	public KeyValue<String, Integer> getSrc2()
+	{
+		return this.instrSource2;
 	}
-	public KeyValue<String, Integer> getDestination(){
-		return this.destination;	
+
+	public Integer getLiteral()
+	{
+		return this.instrLiteral;
 	}
-	public void setSrc1(Integer value){
-		this.src1.setValue(value);
+
+	public KeyValue<String, Integer> getDestination()
+	{
+		return this.instrdestination;
 	}
-	public void setSrc2(Integer value){
-		this.src2.setValue(value);
+
+	public void setSrc1(Integer value)
+	{
+		this.instrSource1.setValue(value);
 	}
-	public void setDestination(Integer value){
-		this.destination.setValue(value);
+
+	public void setSrc2(Integer value)
+	{
+		this.instrSource2.setValue(value);
 	}
-	public void setMemoryAddress(Integer value){
-		this.memAddress =  value;
-	}	
-	public boolean isNOP(){
-		return this.isNOP;
+
+	public void setDestination(Integer value)
+	{
+		this.instrdestination.setValue(value);
+	}
+
+	public void setMemoryAddress(Integer value)
+	{
+		this.instrMemAddress = value;
+	}
+
+	public boolean isNOP()
+	{
+		return this.isInstrNOP;
 	}
 }
