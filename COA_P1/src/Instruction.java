@@ -37,7 +37,6 @@ public class Instruction {
 		this.content = content;
 		this.isNOP = false;
 	}
-
 	public String getContent(){
 		return content;
 	}	
