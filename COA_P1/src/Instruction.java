@@ -6,9 +6,9 @@
  */
 public class Instruction
 {
-	private KeyValue<String, Integer> instrSource1;
-	private KeyValue<String, Integer> instrSource2;
-	private KeyValue<String, Integer> instrdestination;
+	private RegisgerName_Value<String, Integer> instrSource1;
+	private RegisgerName_Value<String, Integer> instrSource2;
+	private RegisgerName_Value<String, Integer> instrdestination;
 	private Integer instrLiteral;
 	private Integer instrMemAddress;
 	private String instrContent;
@@ -31,8 +31,8 @@ public class Instruction
 	 * @param content
 	 *            : instruction as string "ADD R1 R2 R3"
 	 */
-	public Instruction(String operation, KeyValue<String, Integer> destination, KeyValue<String, Integer> src1,
-			KeyValue<String, Integer> src2, Integer literal, String content)
+	public Instruction(String operation, RegisgerName_Value<String, Integer> destination, RegisgerName_Value<String, Integer> src1,
+			RegisgerName_Value<String, Integer> src2, Integer literal, String content)
 	{
 		this.instrSource1 = src1;
 		this.instrSource2 = src2;
@@ -62,7 +62,7 @@ public class Instruction
 	/**
 	 * @return first source's Register name and value : hashmap
 	 */
-	public KeyValue<String, Integer> getSrc1()
+	public RegisgerName_Value<String, Integer> getSrc1()
 	{
 		return this.instrSource1;
 	}
@@ -70,12 +70,12 @@ public class Instruction
 	/**
 	 * @return second source's Register name and value : hashmap
 	 */
-	public KeyValue<String, Integer> getSrc2()
+	public RegisgerName_Value<String, Integer> getSrc2()
 	{
 		return this.instrSource2;
 	}
 
-	public KeyValue<String, Integer> getDestination()
+	public RegisgerName_Value<String, Integer> getDestination()
 	{
 		return this.instrdestination;
 	}
