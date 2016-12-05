@@ -11,7 +11,7 @@ public class InstrParser
 	 * 
 	 * @param instruction
 	 * @param Program
-	 *            Counter
+	 *            Counter s
 	 * @return instruction
 	 */
 	public Instruction parseInstruction(String instr, int pcCounter)
