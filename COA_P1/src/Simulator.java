@@ -290,7 +290,6 @@ public class Simulator
 			stages.put("Dly", latches.get("B1"));
 		} else
 		{
-			// latches.put("B", branchDelayMethod(latches.get("B")));
 			stages.put("Dly", new Instruction());
 		}
 	}
@@ -307,10 +306,6 @@ public class Simulator
 		return instruction;
 	}
 
-	private static Instruction branchDelayMethod(Instruction instruction)
-	{
-		return instruction;
-	}
 
 	private static void memoryStage()
 	{
@@ -508,6 +503,7 @@ public class Simulator
 			currentFilePointer++;
 			currentPC = currentPC + 4;
 			System.out.println("-------------------------Instruction Address : " + currentPC + "------------------------");
+			lines.close();
 
 		} catch (Exception ex)
 		{
