@@ -352,6 +352,13 @@ public class Simulator
 			}
 			if (stages.get("W").getOperation().equals(TypesOfOperations.HALT))
 			{
+				stages.put("F", new Instruction());
+				stages.put("D", new Instruction());
+				stages.put("E", new Instruction());
+				stages.put("E2", new Instruction());
+				stages.put("B1", new Instruction());
+				stages.put("Dly", new Instruction());
+				stages.put("M", new Instruction());
 				isComplete = true;
 			}
 		}
