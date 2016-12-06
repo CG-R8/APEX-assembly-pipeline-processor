@@ -20,6 +20,7 @@ public class Simulator
 	 * Stages represent the current state of all stages.It is the hashmp of current cycles instruction
 	 */
 	static Map<String, Instruction> stages;
+	
 	/**
 	 * Latches contain the stages of previous cycle.So every time current cycle's state is processed it can be moved to latches.
 	 * <p>
@@ -31,6 +32,9 @@ public class Simulator
 	 * This will get updated only when instruction is preocesed and get done in writeback stage
 	 */
 	static Map<String, Integer> registerFile;
+	
+	static Map<String, String> renameTable;
+	static Map<String, Integer> freePhysicalRegister;
 	/**
 	 * This register sets value when BAL isntrucion calculate its address.
 	 */
@@ -39,6 +43,7 @@ public class Simulator
 	static boolean isValidSource;
 	static public RegisgerName_Value<String, Integer> forwardingReg = null;
 	static public RegisgerName_Value<String, Integer> forwardingRegMEMtoEX = null;
+	private static boolean isFetchInstruction;
 
 	/**
 	 * Fetch stage: Check current instruction in Decode stage is present and is
@@ -64,7 +69,6 @@ public class Simulator
 			try
 			{
 				instruction = parser.parseInstruction(getContent(), currentPC);
-
 				if (stages.containsKey("F"))
 				{
 					latches.put("F", stages.get("F"));
@@ -85,6 +89,7 @@ public class Simulator
 	 */
 	private static void decodeStage()
 	{
+		
 		if (isValidSource)
 		{
 			if (latches.containsKey("F") && !latches.get("F").isNOP())
@@ -92,6 +97,14 @@ public class Simulator
 				try
 				{
 					latches.put("F", getSRCFromRegister(latches.get("F")));
+					Instruction instruction = latches.get("F");
+					//TODO Create a function for mapping with RAT. we have all registers decoded and stored in the latches F instruction.
+
+					//if (Rename.isROBAvailable()) {
+						instruction = Rename.renameInstruction(instruction);
+						isFetchInstruction = Queue.addToQueue(instruction);
+				//	}
+					
 				} catch (Exception e)
 				{
 					System.err.println("Error while reading values from Registers in Decode function");
@@ -127,7 +140,6 @@ public class Simulator
 				if (!controlFlowInstruction.contains(latches.get("D").getOperation()))
 				{
 					Instruction instructionEx = latches.get("D");
-					// TODO check the src 1 and src 2 with forwarding registers
 					if ((forwardingReg != null) && (forwardingRegMEMtoEX != null)
 							&& forwardingReg.getKey().equals(forwardingRegMEMtoEX.getKey()))
 					{
@@ -319,7 +331,6 @@ public class Simulator
 				if (!latches.get("E2").isNOP())
 				{
 					latches.put("E2", performMemoryOperation(latches.get("E2")));
-					// TODO mem to EX forwarding
 					forwardingRegMEMtoEX = latches.get("E2").getDestination();
 				}
 				moveInstruction("M", "E2");
@@ -435,14 +446,31 @@ public class Simulator
 		{
 			System.out.print(register.getKey() + " : " + register.getValue() + "|\t|");
 		}
-		System.out.println("Special Register X:" + specialRegister);
-		System.out.println("\n0 to 99 Memory Address Details: ");
-		for (int i = 0; i < 100; i++)
-		{
-			memoryValues.append(" [" + i + " - " + memoryBlocks[i] + "] ");
-			if (i > 0 && i % 10 == 0)
-				memoryValues.append("\n");
+//		System.out.println("Special Register X:" + specialRegister);
+//		System.out.println("\n0 to 99 Memory Address Details: ");
+		System.out.println("\nIssue Queue: ");
+		for(Instruction instruction : Queue.retrieveIsssueQueue()){
+			System.out.println(instruction.getContent());
 		}
+		
+//		for (int i = 0; i < 100; i++)
+//		{
+//			memoryValues.append(" [" + i + " - " + memoryBlocks[i] + "] ");
+//			if (i > 0 && i % 10 == 0)
+//				memoryValues.append("\n");
+//		}
+		
+		
+		System.out.println("\nPhysical Register File: \n");
+
+		StringBuilder rntValues = new StringBuilder();
+		for(Entry<String, String> renameEntry : Rename.getRenameTable().entrySet()){
+			rntValues.append(renameEntry.getKey() + " : " + renameEntry.getValue() + " | ");
+
+		}
+		System.out.println("\nRename Register File: \n" + rntValues);	
+
+		
 		System.out.println(memoryValues);
 
 	}
@@ -632,7 +660,6 @@ public class Simulator
 					&& stages.get(stage).getDestination() != null
 					// If there is same Register in both instruction
 					&& stages.get(stage).getDestination().getKey().equals(src.getKey());
-			// TODO what if the branch is dependent
 
 			return !(isDependent);
 		} catch (Exception e)

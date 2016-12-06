@@ -14,6 +14,7 @@ public class Instruction
 	private Integer instrMemAddress;
 	private String instrContent;
 	private boolean isInstrNOP;
+	private boolean sourceValid;
 
 	public Instruction()
 	{
@@ -99,5 +100,15 @@ public class Instruction
 	public boolean isNOP()
 	{
 		return this.isInstrNOP;
+	}
+	
+	// Returns true if source 1 and 2 are valid
+	public boolean isSourceValid() {
+		return this.sourceValid;
+	}
+
+	// Set if source 1 and 2 are valid
+	public void isSourceValid(boolean value) {
+		sourceValid = value;
 	}
 }
