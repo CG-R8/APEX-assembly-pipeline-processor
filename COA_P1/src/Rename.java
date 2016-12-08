@@ -6,6 +6,7 @@
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 
 public class Rename
 {
@@ -17,6 +18,8 @@ public class Rename
 	private static int robCount = 0;
 	private static int prfMAX = 16;
 	//	private static ArrayList<ROBEntry> reorderBuffer = new ArrayList<ROBEntry>();
+	
+	
 	private static int[] physicalRegFile = new int[16];
 	private static Map<String, String> renameTable = new HashMap<String, String>(16);
 	private static int counter = 0;
@@ -122,6 +125,7 @@ public class Rename
 		{
 			isDestination = true;
 			settingPhysicalRegister(instruction.getDestination().getKey(), counter,isDestination);
+			
 		}
 		if (instruction.getSrc1() != null)
 		{
@@ -158,31 +162,38 @@ public class Rename
 
 	public static void settingPhysicalRegister(String instrParameter, int counter2, Boolean isDestination)
 	{
+		String freephysicalRegister = new String();		
 		Boolean isArchRegPresent=false;
 		if(renameTable.isEmpty())
 		{
 			System.out.println(" First Entry in physical register ");
-			renameTable.put(instrParameter, "P"+counter);
+			freephysicalRegister = Rename.getFreeRegister();				
+			renameTable.put(instrParameter, freephysicalRegister);
+			Simulator.physicalRegisterFile.put(freephysicalRegister, 1);
 			counter++;
 
 		}else
 		{
 			if(isDestination)
 			{
-				for (Map.Entry<String, String> entry : renameTable.entrySet()) 
+				for (Map.Entry<String, String> entry : renameTable.entrySet()) //check if the new destination register is already present in RAT
 				{
 					if(instrParameter.equals(entry.getKey()))
 					{
 						isArchRegPresent=true;
 						// ADD R1  -- R1 present in rename table. assign p4 at same entry
-						entry.setValue("P" + counter++);
+						freephysicalRegister = Rename.getFreeRegister();
+						entry.setValue(freephysicalRegister);
+						Simulator.physicalRegisterFile.put(freephysicalRegister,1);
 						System.out.println("Destination Register : "+instrParameter+" : "+entry.getKey()+" Physical Reg : "+entry.getValue());
 					}
 
 				}
 				if(!isArchRegPresent)
 				{
-					renameTable.put(instrParameter, "P"+counter);
+					freephysicalRegister = Rename.getFreeRegister();
+					renameTable.put(instrParameter, freephysicalRegister);
+					Simulator.physicalRegisterFile.put(freephysicalRegister, 1);
 					counter++;
 
 				}
@@ -203,8 +214,10 @@ public class Rename
 				}
 				if(!isArchRegPresent)
 				{
+					System.out.println("Problem with input file");
 					System.out.println("New physical register added : "+instrParameter+" : "+ "P"+counter);
 					renameTable.put(instrParameter, "P"+counter);
+					Simulator.physicalRegisterFile.put("P" + counter, 1);
 					counter++;
 				}
 			}
@@ -248,6 +261,24 @@ public class Rename
 	 * 
 	 * while (true) { if (!retireROBFields()) break; } }
 	 */
+	
+	//returns a free physical register; null if no physical register is free.
+	public static String getFreeRegister()
+	{
+		for (Entry<String, Integer> entry : Simulator.physicalRegisterFile.entrySet())
+		{
+			if(entry.getValue().equals(0))
+			{
+				return entry.getKey();
+			}
+		}
+		return null;
+		
+	}
+	
+	
+	
+	
 	// Returns PRF file
 	public static int[] getPhysicalRegFile()
 	{
