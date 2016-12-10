@@ -123,7 +123,7 @@ public class Simulator
 				{
 					if (!instruction.isNOP())
 						execute1(instruction);
-				} else
+				} else 
 				{
 					if (!instruction.isNOP())
 					isFetchInstruction = Queue.addToQueue(instruction);
