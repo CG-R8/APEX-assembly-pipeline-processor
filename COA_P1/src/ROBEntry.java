@@ -9,7 +9,7 @@ public class ROBEntry {
 	private int result;
 	private boolean status;
 
-	// Set Instruction address that need to be dispatch in ROB
+	// Set Instruction address that need to be dispatch in ROB 
 	public void setInstructionAddress(int value) {
 		instructionAddress = value;
 	}
