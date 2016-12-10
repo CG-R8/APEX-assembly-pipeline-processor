@@ -1,3 +1,4 @@
+
 /**
  *
  */
@@ -16,56 +17,30 @@ public class Simulator
 	static int currentPC;
 	static int currentFilePointer;
 	static int[] memoryBlocks;
-	/**
-	 * Stages represent the current state of all stages.It is the hashmp of current cycles instruction
-	 */
 	static Map<String, Instruction> stages;
-	
-	/**
-	 * Latches contain the stages of previous cycle.So every time current cycle's state is processed it can be moved to latches.
-	 * <p>
-	 * For example : 
-	 */
 	static Map<String, Instruction> latches;
-	/**
-	 * This hashmap contains the register details (register name and its value)
-	 * This will get updated only when instruction is preocesed and get done in writeback stage
-	 */
 	static Map<String, Integer> registerFile;
-	
-	static Map<String, String> renameTable;
+
 	static Map<String, Integer> freePhysicalRegister;
-	/**
-	 * This register sets value when BAL isntrucion calculate its address.
-	 */
+	static Map<String, Integer> URF = new HashMap<String, Integer>(16);;
 	static int specialRegister;
 	static boolean isComplete;
 	static boolean isValidSource;
 	static public RegisgerName_Value<String, Integer> forwardingReg = null;
 	static public RegisgerName_Value<String, Integer> forwardingRegMEMtoEX = null;
 	private static boolean isFetchInstruction;
+	public static boolean isALU1FUAvailable;
+	public static Map<String, Integer> physicalRegisterFile = new HashMap<String, Integer>(16);
+	private static boolean isMULFUAvailable=true;
+	private static int mulCounter = 1;
 
-	/**
-	 * Fetch stage: Check current instruction in Decode stage is present and is
-	 * NOP? then check the registers values and set {@isSourceValid} flag
-	 * <p>
-	 * if flag is set, it mean we can process new instruction from file.
-	 * When we fetch (pares)new instruction we advance to next stage of cycle.
-	 *And create a copy of that instrucition into latch hashmap for fetch. 
-	 * 
-	 */
 	private static void fetchStage()
 	{
 		InstrParser parser = new InstrParser();
-		// Check if the current cycle have anything in decode stage and is it
-		// NOP
-		if (stages.containsKey("D") && !stages.get("D").isNOP())
+		Instruction instruction;
+
+		if (isFetchInstruction)
 		{
-			stages.put("D", getSRCFromRegister(stages.get("D")));
-		}
-		if (isValidSource)
-		{
-			Instruction instruction;
 			try
 			{
 				instruction = parser.parseInstruction(getContent(), currentPC);
@@ -76,117 +51,158 @@ public class Simulator
 				stages.put("F", instruction);
 			} catch (IOException e)
 			{
-				System.err.println("Got exception In fetch stage");
 				e.printStackTrace();
 			}
 		}
 	}
 
-	/**
-	 * This function decodes the instruction
-	 * <p>
-	 * This function also set flag for source is valid or not
-	 */
-	private static void decodeStage()
+	private static void decodeStage1()
 	{
+
+		moveInstruction("D1", "F");
+
+		if (stages.get("D1") != null)
+			System.out.println("--------Decode 1----------> " + stages.get("D1").getContent());
+	}
+
+	private static void decodeStage2()
+	{
+		moveInstruction("D2", "D1");
+		Instruction instruction = stages.get("D2");
+		if (instruction != null && !instruction.isNOP())
+		{
+			isFetchInstruction = false;
+
+			if (Rename.isROBAvailable())
+			{
+				instruction = Rename.renameInstruction(instruction);
+				Queue.markAllJustaddedFalse();
+				instruction = getSourceValues(instruction);
+				instruction.setJustAddedToQ(true);
+				isFetchInstruction = Queue.addToQueue(instruction);
+			}
+		}
+		// Remove read if valid bit is set as 1
+		// Rename.retireROBEntry();
+		if (stages.get("D2") != null)
+			System.out.println("--------Decode 2----------> " + stages.get("D2").getContent());
+
+	}
+
+	
+
+	private static void dispatch()
+	{
+
+		/*
+		 * Check issue Q is full HOLD the current instuction 
+		 * 
+		 * If IQ not Full send
+		 * renamed instruction. To IQ tail 
+		 * 
+		 * Send the renamed instruction to
+		 * ROB.tail 
+		 * Set that entries ROB valid bit 0 
+		 * 
+		 * Check if already there is
+		 * instruction which is in Decode but not in IQ Push suh instruction
+		 * into IQ and then take new instruction in Decode
+		 */
 		
-		if (isValidSource)
+		if (isALU1FUAvailable)
 		{
-			if (latches.containsKey("F") && !latches.get("F").isNOP())
+			Instruction instruction = Queue.pullIQInstruction("ALU");
+			// if the source valid bits are not 1
+			if (instruction.isJustAddedToQ())
 			{
-				try
-				{
-					latches.put("F", getSRCFromRegister(latches.get("F")));
-					Instruction instruction = latches.get("F");
-					//TODO Create a function for mapping with RAT. we have all registers decoded and stored in the latches F instruction.
-
-					//if (Rename.isROBAvailable()) {
-						instruction = Rename.renameInstruction(instruction);
-						isFetchInstruction = Queue.addToQueue(instruction);
-				//	}
-					
-				} catch (Exception e)
-				{
-					System.err.println("Error while reading values from Registers in Decode function");
-					e.printStackTrace();
-				}
-			}
-			moveInstruction("D", "F");
-		} else
-		{
-			latches.put("D", new Instruction());
-		}
-	}
-
-	/**
-	 * This method is used to perform the ALU1 functioniting.
-	 * 
-	 * 
-	 */
-	private static void execute1()
-	{
-		boolean flushRegisterValues = false;
-		boolean branchFUflag = false;
-		ExecutionOfOpcode functionUnit = new ExecutionOfOpcode();
-		String controlFlowInstruction = TypesOfOperations.BNZ + "|" + TypesOfOperations.BZ + "|"
-				+ TypesOfOperations.JUMP + "|" + TypesOfOperations.BAL + "|" + TypesOfOperations.HALT;
-
-		if (latches.containsKey("D"))
-		{
-			if (!latches.get("D").isNOP())
+				instruction.setJustAddedToQ(false);
+				isFetchInstruction = Queue.addToQueue(instruction);
+			} else
 			{
-				// Check if the instruction in Decode stage is not Control flow
-				// instruction
-				if (!controlFlowInstruction.contains(latches.get("D").getOperation()))
+				if (instruction.isqDispatchable())
 				{
-					Instruction instructionEx = latches.get("D");
-					if ((forwardingReg != null) && (forwardingRegMEMtoEX != null)
-							&& forwardingReg.getKey().equals(forwardingRegMEMtoEX.getKey()))
-					{
-						forwardingRegMEMtoEX.setValue(forwardingReg.getValue());
-					}
-
-					if ((instructionEx.getSrc1() != null)
-							&& (instructionEx.getSrc1().getKey().equals(forwardingReg.getKey())))
-						instructionEx.setSrc1(forwardingReg.getValue());
-					if ((instructionEx.getSrc2() != null)
-							&& (instructionEx.getSrc2().getKey().equals(forwardingReg.getKey())))
-						instructionEx.setSrc2(forwardingReg.getValue());
-					if ((instructionEx.getSrc1() != null)
-							&& (instructionEx.getSrc1().getKey().equals(forwardingRegMEMtoEX.getKey())))
-					{
-						instructionEx.setSrc1(forwardingRegMEMtoEX.getValue());
-					}
-					if ((instructionEx.getSrc2() != null)
-							&& (instructionEx.getSrc2().getKey().equals(forwardingRegMEMtoEX.getKey())))
-					{
-
-						instructionEx.setSrc2(forwardingRegMEMtoEX.getValue());
-					}
-
-					latches.put("D", functionUnit.executeInstruction(latches.get("D")));
+					if (!instruction.isNOP())
+						execute1(instruction);
 				} else
-				// Here we have the branch instruction
 				{
-					branchFUflag = true;
-					latches.put("E", stages.get("E"));
-					stages.put("E", new Instruction()); // Add NOP in the ALU1
+					if (!instruction.isNOP())
+					isFetchInstruction = Queue.addToQueue(instruction);
 				}
-			}
-			if (!branchFUflag)
-			{
-				moveInstruction("E", "D");
-				if (flushRegisterValues)
-					flushRegister();
+
 			}
 		}
+				if (isMULFUAvailable)
+				{
+					Instruction  instruction=Queue.pullIQInstruction("MUL");
+					if(instruction.isJustAddedToQ())
+					{
+						instruction.setJustAddedToQ(false);
+						isFetchInstruction = Queue.addToQueue(instruction);
+					}else
+					{
+					if(!instruction.isNOP())
+						multiplication();
+					}
+				}else if(mulCounter>1)
+				{
+					multiplication();
+				}
 	}
+
+	private static void execute1(Instruction instruction)
+	{
+		ExecutionOfOpcode functionUnit = new ExecutionOfOpcode();
+		if (instruction != null && !instruction.isNOP())
+		{
+			instruction = functionUnit.executeInstruction(instruction);
+			latches.put("I", instruction);
+		}
+		moveInstruction("E", "I");
+
+		if (stages.get("E") != null)
+			System.out.println("--------ALU1 ----------> " + stages.get("E").getContent());
+	}
+
+	
+	
+	
+	
+	private static void multiplication()
+	{
+		ExecutionOfOpcode functionUnit = new ExecutionOfOpcode();
+		Instruction instruction= new Instruction();
+		if(mulCounter==1)
+		{
+			instruction=Queue.pullIQInstruction("MUL");
+			if(!instruction.isNOP())
+			{
+				instruction = functionUnit.executeInstruction(instruction);
+				stages.put("MUL", instruction);
+			}
+		}
+		if(mulCounter==4)
+		{
+			//write result to URF.
+			System.out.println("=====Committing the MUL value===========================================");
+			mulCounter=1;
+			URF.put(stages.get("MUL").getPhysicalDestination().getKey(),stages.get("MUL").getDestination().getValue());
+			stages.put("MUL", new Instruction());
+		}
+		if(stages.containsKey("MUL")&& !stages.get("MUL").isNOP())
+		mulCounter++;
+		
+		if (stages.get("MUL") != null)
+			System.out.println("--------MUL  ----------> " + stages.get("MUL").getContent());
+	}
+	
 
 	private static void execute2Stage()
 	{
-
 		if (latches.containsKey("E"))
 		{
+
+			if (latches.get("E") != null)
+				System.out.println("--------ALU 2----------> " + latches.get("E").getContent());
 			if (!latches.get("E").isNOP())
 			{
 				latches.put("E", executeInstruction2Method(latches.get("E")));
@@ -204,23 +220,22 @@ public class Simulator
 		Integer dest = null;
 		boolean flushRegisterValues = false;
 		ExecutionOfOpcode functionUnit = new ExecutionOfOpcode();
-		String controlFlowInstruction = TypesOfOperations.BNZ + "|" + TypesOfOperations.BZ + "|"
-				+ TypesOfOperations.JUMP + "|" + TypesOfOperations.BAL + "|" + TypesOfOperations.HALT;
+		String controlFlowInstruction = TypesOfOperations.BNZ + "|" + TypesOfOperations.BZ + "|" + TypesOfOperations.JUMP + "|" + TypesOfOperations.BAL + "|" + TypesOfOperations.HALT;
 
 		Instruction branchInstr = new Instruction();
-		branchInstr = latches.get("D");
+		branchInstr = latches.get("I");
 
-		if (latches.containsKey("D"))
+		if (latches.containsKey("I"))
 		{
-			if (!latches.get("D").isNOP())
+			if (!latches.get("I").isNOP())
 			{
-				if (controlFlowInstruction.contains(latches.get("D").getOperation()))
+				if (controlFlowInstruction.contains(latches.get("I").getOperation()))
 				{
 					if (stages.containsKey("B1"))
 						latches.put("B1", stages.get("B1"));
 					else
 						latches.put("B1", new Instruction());
-					stages.put("B1", latches.get("D"));
+					stages.put("B1", latches.get("I"));
 				} else
 				{
 					if (stages.containsKey("B1"))
@@ -239,32 +254,28 @@ public class Simulator
 			}
 		}
 
-		if (latches.containsKey("D"))
+		if (latches.containsKey("I"))
 		{
-			if (!latches.get("D").isNOP() && controlFlowInstruction.contains(latches.get("D").getOperation()))
+			if (!latches.get("I").isNOP() && controlFlowInstruction.contains(latches.get("I").getOperation()))
 			{
-				if ((forwardingReg != null) && (forwardingRegMEMtoEX != null)
-						&& forwardingReg.getKey().equals(forwardingRegMEMtoEX.getKey()))
+				if ((forwardingReg != null) && (forwardingRegMEMtoEX != null) && forwardingReg.getKey().equals(forwardingRegMEMtoEX.getKey()))
 				{
 					forwardingRegMEMtoEX.setValue(forwardingReg.getValue());
 				}
-				if ((branchInstr.getDestination() != null)
-						&& (branchInstr.getDestination().getKey().equals(forwardingReg.getKey())))
+				if ((branchInstr.getDestination() != null) && (branchInstr.getDestination().getKey().equals(forwardingReg.getKey())))
 					branchInstr.setDestination(forwardingReg.getValue());
-				if ((branchInstr.getDestination() != null)
-						&& (branchInstr.getDestination().getKey().equals(forwardingRegMEMtoEX.getKey())))
+				if ((branchInstr.getDestination() != null) && (branchInstr.getDestination().getKey().equals(forwardingRegMEMtoEX.getKey())))
 				{
 					branchInstr.setDestination(forwardingRegMEMtoEX.getValue());
 				}
-				if (latches.get("D").getOperation().equals(TypesOfOperations.BAL))
+				if (latches.get("I").getOperation().equals(TypesOfOperations.BAL))
 				{
 					specialRegister = currentPC - 4;
 				}
-				registerVal = latches.get("D").getLiteral();
-				if (latches.get("D").getDestination() != null
-						&& registerFile.containsKey(latches.get("D").getDestination().getKey()))
+				registerVal = latches.get("I").getLiteral();
+				if (latches.get("I").getDestination() != null && registerFile.containsKey(latches.get("I").getDestination().getKey()))
 				{
-					registerVal = registerFile.get(latches.get("D").getDestination().getKey());
+					registerVal = registerFile.get(latches.get("I").getDestination().getKey());
 
 					if (registerVal == null)
 						registerVal = 0;
@@ -273,8 +284,7 @@ public class Simulator
 				{
 					dest = stages.get("E2").getDestination().getValue();
 				}
-				Integer pcCounter = functionUnit.evaluateBranchInstr(latches.get("D"), dest, currentPC, registerVal,
-						specialRegister);
+				Integer pcCounter = functionUnit.evaluateBranchInstr(latches.get("I"), dest, currentPC, registerVal, specialRegister);
 				if (currentPC != pcCounter)
 				{
 					currentPC = pcCounter;
@@ -308,16 +318,21 @@ public class Simulator
 
 	private static Instruction executeInstruction2Method(Instruction instruction)
 	{
-		String controlFlowInstruction = TypesOfOperations.BNZ + "|" + TypesOfOperations.BZ + "|"
-				+ TypesOfOperations.JUMP + "|" + TypesOfOperations.BAL + "|" + TypesOfOperations.HALT;
+		Integer aluResultValue = 0;
+		String aluResultRegister;
+		String controlFlowInstruction = TypesOfOperations.BNZ + "|" + TypesOfOperations.BZ + "|" + TypesOfOperations.JUMP + "|" + TypesOfOperations.BAL + "|" + TypesOfOperations.HALT;
 		if (!controlFlowInstruction.contains(instruction.getOperation()))
 			if (latches.containsKey("E"))
 			{
 				forwardingReg = instruction.getDestination();
+				aluResultValue = instruction.getDestination().getValue();
+				aluResultRegister = instruction.getPhysicalDestination().getKey().toString();
+				URF.put(aluResultRegister, aluResultValue);
 			}
+		
+
 		return instruction;
 	}
-
 
 	private static void memoryStage()
 	{
@@ -340,18 +355,18 @@ public class Simulator
 
 	private static void writebackStage()
 	{
-		String controlFlowInstruction = TypesOfOperations.BNZ + "|" + TypesOfOperations.BZ + "|"
-				+ TypesOfOperations.JUMP + "|" + TypesOfOperations.BAL + "|" + TypesOfOperations.HALT;
+		String controlFlowInstruction = TypesOfOperations.BNZ + "|" + TypesOfOperations.BZ + "|" + TypesOfOperations.JUMP + "|" + TypesOfOperations.BAL + "|" + TypesOfOperations.HALT;
 		if (latches.containsKey("M"))
 		{
 			moveInstruction("W", "M");
 		}
 		if (stages.containsKey("W") && !stages.get("W").isNOP())
 		{
+			getSourceValues(stages.get("W"));
+
 			// Check instruction in W is one of the control flow instr or not
 			// and not STORE
-			if (!controlFlowInstruction.contains(stages.get("W").getOperation())
-					&& !stages.get("W").getOperation().equals(TypesOfOperations.STORE))
+			if (!controlFlowInstruction.contains(stages.get("W").getOperation()) && !stages.get("W").getOperation().equals(TypesOfOperations.STORE))
 			{
 				RegisgerName_Value<String, Integer> destinationReg = stages.get("W").getDestination();
 				registerFile.put(destinationReg.getKey(), destinationReg.getValue());
@@ -368,6 +383,9 @@ public class Simulator
 				isComplete = true;
 			}
 		}
+		
+		
+		
 	}
 
 	/**
@@ -387,6 +405,15 @@ public class Simulator
 		specialRegister = 0;
 		isComplete = false;
 		isValidSource = true;
+		isFetchInstruction = true;
+		isALU1FUAvailable = true;
+		int counter = 0;
+		while (counter < 16)
+		{
+			physicalRegisterFile.put("P" + counter, 0);
+			counter++;
+		}
+
 		System.out.println("-----Initialization Completed------");
 	}
 
@@ -401,10 +428,17 @@ public class Simulator
 	{
 		for (int i = 1; i <= noCycles; i++)
 		{
+			if (i == 23)
+			{
+				System.out.println("");
+			}
 			System.out.println("---------------------------- Cycle : " + i + "--------------------------------");
 			fetchStage();
-			decodeStage();
-			execute1();
+			decodeStage1();
+			decodeStage2();
+			dispatch();
+//			multiplication();
+			// execute1();
 			execute2Stage();
 			branchStage();
 			delayStage();
@@ -426,8 +460,13 @@ public class Simulator
 		System.out.println("\nPipleline Stages: ");
 		if (stages.get("F") != null)
 			System.out.println("--------Fetch-----------> " + stages.get("F").getContent());
-		if (stages.get("D") != null)
-			System.out.println("--------Decode----------> " + stages.get("D").getContent());
+		if (stages.get("D1") != null)
+			System.out.println("--------Decode1----------> " + stages.get("D1").getContent());
+		if (stages.get("D2") != null)
+			System.out.println("--------Decode2----------> " + stages.get("D2").getContent());
+		// if (stages.get("I") != null)
+		// System.out.println("--------IssueQeue------> " +
+		// stages.get("I").getContent());
 		if (stages.get("E") != null)
 			System.out.println("--------Execution1------> " + stages.get("E").getContent());
 		if (stages.get("E2") != null)
@@ -446,31 +485,42 @@ public class Simulator
 		{
 			System.out.print(register.getKey() + " : " + register.getValue() + "|\t|");
 		}
-//		System.out.println("Special Register X:" + specialRegister);
-//		System.out.println("\n0 to 99 Memory Address Details: ");
+		System.out.println("\n U R F : ");
+		for (Entry<String, Integer> register : URF.entrySet())
+		{
+			System.out.print(register.getKey() + " : " + register.getValue() + "|\t|");
+		}
+		System.out.println("\nR A T : ");
+		for (Entry<String, String> register : Rename.getRenameTable().entrySet())
+		{
+			System.out.print(register.getKey() + " : " + register.getValue() + "|\t|");
+		}
+		// System.out.println("Special Register X:" + specialRegister);
+		// System.out.println("\n0 to 99 Memory Address Details: ");
 		System.out.println("\nIssue Queue: ");
-		for(Instruction instruction : Queue.retrieveIsssueQueue()){
+		for (Instruction instruction : Queue.retrieveIsssueQueue())
+		{
 			System.out.println(instruction.getContent());
 		}
-		
-//		for (int i = 0; i < 100; i++)
-//		{
-//			memoryValues.append(" [" + i + " - " + memoryBlocks[i] + "] ");
-//			if (i > 0 && i % 10 == 0)
-//				memoryValues.append("\n");
-//		}
-		
-		
-		System.out.println("\nPhysical Register File: \n");
 
-		StringBuilder rntValues = new StringBuilder();
-		for(Entry<String, String> renameEntry : Rename.getRenameTable().entrySet()){
-			rntValues.append(renameEntry.getKey() + " : " + renameEntry.getValue() + " | ");
+		// for (int i = 0; i < 100; i++)
+		// {
+		// memoryValues.append(" [" + i + " - " + memoryBlocks[i] + "] ");
+		// if (i > 0 && i % 10 == 0)
+		// memoryValues.append("\n");
+		// }
 
-		}
-		System.out.println("\nRename Register File: \n" + rntValues);	
+		//
+		// System.out.println("Physical Register File:");
+		//
+		// StringBuilder rntValues = new StringBuilder();
+		// for(Entry<String, String> renameEntry :
+		// Rename.getRenameTable().entrySet()){
+		// rntValues.append(renameEntry.getKey() + " : " +
+		// renameEntry.getValue() + " | ");
+		//
+		// }
 
-		
 		System.out.println(memoryValues);
 
 	}
@@ -484,8 +534,10 @@ public class Simulator
 			{
 				System.out.println("------------------------------Apex Simulator----------------------------------");
 				System.out.println(" 1 : Initialize\n 2 : Simulate \n 3 : Display\n 4 : Exit");
-				scanner = new Scanner(System.in);
-				switch (scanner.nextLine())
+//				scanner = new Scanner(System.in);
+//				switch (scanner.nextLine())
+				switch ("2")
+
 					{
 					case "1":
 						Initialize();
@@ -493,13 +545,16 @@ public class Simulator
 					case "2":
 						Initialize();
 						System.out.print("Please enter no of cycles : ");
-						Simulate(Integer.parseInt(scanner.nextLine()));
+//						Simulate(Integer.parseInt(scanner.nextLine()));
+						Simulate(30);
+
 						break;
 					case "3":
 						Display();
 						break;
 					case "4":
-						System.exit(0);;
+						System.exit(0);
+						;
 					}
 			}
 		} catch (Exception ex)
@@ -535,7 +590,7 @@ public class Simulator
 
 		} catch (Exception ex)
 		{
-//			 ex.printStackTrace();
+			// ex.printStackTrace();
 		}
 		return instr;
 	}
@@ -571,7 +626,7 @@ public class Simulator
 	 * @param pair
 	 * @return value of register
 	 */
-	private static Integer readRegister(RegisgerName_Value<String, Integer> pair)
+	public static Integer readRegister(RegisgerName_Value<String, Integer> pair)
 	{
 		if (pair != null && registerFile.containsKey(pair.getKey()))
 		{
@@ -599,23 +654,22 @@ public class Simulator
 
 		if (src1 != null)
 		{
-			isSrc1Valid = checkFlowDependencies(src1, "E");
+			isSrc1Valid = checkFlowDependencies(src1, "E") && checkFlowDependencies(src1, "I");
 			instruction.setSrc1(readRegister(src1));
 		}
 		if (src2 != null)
 		{
-			isSrc2Valid = checkFlowDependencies(src2, "E");
+			isSrc2Valid = checkFlowDependencies(src2, "E") && checkFlowDependencies(src2, "I");
 			instruction.setSrc2(readRegister(src2));
 		}
 		if (instruction.getOperation().equals(TypesOfOperations.BAL))
 		{
-			isBalValid = checkFlowDependencies(destination, "E");
+			isBalValid = checkFlowDependencies(destination, "E") && checkFlowDependencies(destination, "I");
 			instruction.setDestination(-1);
 		}
 		if (instruction.getOperation().equals(TypesOfOperations.STORE))
 		{
-			isDestValid = checkFlowDependencies(destination, "E") && checkFlowDependencies(destination, "E2")
-					&& checkFlowDependencies(destination, "M");
+			isDestValid = checkFlowDependencies(destination, "E") && checkFlowDependencies(destination, "E2") && checkFlowDependencies(destination, "M");
 			if (!isDestValid)
 			{
 				isDestValid = true;
@@ -684,12 +738,10 @@ public class Simulator
 			if (instruction.getOperation() != null && instruction.getOperation().equals(TypesOfOperations.STORE))
 			{
 				Instruction lastInstructionM = stages.get("M");
-				if (!lastInstructionM.isNOP() && lastInstructionM.getOperation().equals("LOAD")
-						&& (lastInstructionM.getDestination().getKey().equals(instruction.getDestination().getKey())))
+				if (!lastInstructionM.isNOP() && lastInstructionM.getOperation().equals("LOAD") && (lastInstructionM.getDestination().getKey().equals(instruction.getDestination().getKey())))
 				{
 					instruction.setDestination(lastInstructionM.getDestination().getValue());
-				} else if ((!lastInstructionM.isNOP())
-						&& lastInstructionM.getDestination().getKey().equals(instruction.getDestination().getKey()))
+				} else if ((!lastInstructionM.isNOP()) && lastInstructionM.getDestination().getKey().equals(instruction.getDestination().getKey()))
 				{
 					instruction.setDestination(lastInstructionM.getDestination().getValue());
 				} else
@@ -707,6 +759,54 @@ public class Simulator
 		{
 			e.printStackTrace();
 		}
+		return instruction;
+	}
+	private static Instruction getSourceValues(Instruction instruction)
+	{
+		RegisgerName_Value<String, Integer> pSrc1 = instruction.getPhysicalSource1();
+		RegisgerName_Value<String, Integer> pSrc2 = instruction.getPhysicalSource2();
+		boolean src1_local_valid = false;
+		boolean src2_local_valid = false;
+
+		if(pSrc1!=null)
+		{
+			for (Entry<String, Integer> entry : URF.entrySet())
+			{
+				if(entry.getKey().equals(pSrc1.getKey()))
+				{
+					instruction.setPhysicalSource1(new RegisgerName_Value<String, Integer>(entry.getKey(), entry.getValue()));
+					instruction.setSrc1Valid(true);
+					src1_local_valid = true;
+					break;
+				}
+			}
+		}
+		if(pSrc2!=null)
+		{
+			for (Entry<String, Integer> entry : URF.entrySet())
+			{
+				if(entry.getKey().equals(pSrc2.getKey()))
+				{
+					instruction.setPhysicalSource2(new RegisgerName_Value<String, Integer>(entry.getKey(), entry.getValue()));
+					instruction.setSrc2Valid(true);
+					src2_local_valid = true;
+					break;
+				}
+			}
+		}
+		if(pSrc1==null && (pSrc2==null))
+		{
+			instruction.setqDispatchable(true);
+		}else
+		if(("STORE|LOAD|BAL").contains(instruction.getOperation()))
+		{
+			instruction.setqDispatchable(src1_local_valid);
+		}
+		else
+		{
+			instruction.setqDispatchable(src2_local_valid && src1_local_valid);
+		}
+		
 		return instruction;
 	}
 

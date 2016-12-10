@@ -60,42 +60,43 @@ public class ExecutionOfOpcode
 		switch (instruction.getOperation())
 			{
 			case TypesOfOperations.ADD:
-				instruction.setDestination(instruction.getSrc1().getValue() + instruction.getSrc2().getValue());
+				instruction.setDestination(instruction.getPhysicalSource1().getValue() + instruction.getPhysicalSource2().getValue());
 				break;
 			case TypesOfOperations.SUB:
-				instruction.setDestination(instruction.getSrc1().getValue() - instruction.getSrc2().getValue());
+				instruction.setDestination(instruction.getPhysicalSource1().getValue() - instruction.getPhysicalSource2().getValue());
 				break;
 			case TypesOfOperations.MOVC:
-				if (instruction.getSrc1() != null)
-					instruction.setDestination(instruction.getSrc1().getValue());
+				if (instruction.getPhysicalSource1() != null)
+					instruction.setDestination(instruction.getPhysicalSource1().getValue());
 				else
 					instruction.setDestination(instruction.getLiteral());
 				break;
 			case TypesOfOperations.MUL:
-				instruction.setDestination(instruction.getSrc1().getValue() * instruction.getSrc2().getValue());
+				instruction.setDestination(instruction.getPhysicalSource1().getValue() * instruction.getPhysicalSource2().getValue());
 				break;
 			case TypesOfOperations.AND:
-				instruction.setDestination(instruction.getSrc1().getValue() & instruction.getSrc2().getValue());
+				instruction.setDestination(instruction.getPhysicalSource1().getValue() & instruction.getPhysicalSource2().getValue());
 				break;
 			case TypesOfOperations.OR:
-				instruction.setDestination(instruction.getSrc1().getValue() | instruction.getSrc2().getValue());
+				instruction.setDestination(instruction.getPhysicalSource1().getValue() | instruction.getPhysicalSource2().getValue());
 				break;
 			case TypesOfOperations.EXOR:
-				instruction.setDestination(instruction.getSrc1().getValue() ^ instruction.getSrc2().getValue());
+				instruction.setDestination(instruction.getPhysicalSource1().getValue() ^ instruction.getPhysicalSource2().getValue());
 				break;
 			case TypesOfOperations.LOAD:
-				if (instruction.getSrc2() != null)
-					instruction.setMemoryAddress(instruction.getSrc1().getValue() + instruction.getSrc2().getValue());
+				if (instruction.getPhysicalSource2() != null)
+					instruction.setMemoryAddress(instruction.getPhysicalSource1().getValue() + instruction.getPhysicalSource2().getValue());
 				else
-					instruction.setMemoryAddress(instruction.getSrc1().getValue() + instruction.getLiteral());
+					instruction.setMemoryAddress(instruction.getPhysicalSource1().getValue() + instruction.getLiteral());
 				break;
 			case TypesOfOperations.STORE:
-				if (instruction.getSrc2() != null)
-					instruction.setMemoryAddress(instruction.getSrc1().getValue() + instruction.getSrc2().getValue());
+				if (instruction.getPhysicalSource2() != null)
+					instruction.setMemoryAddress(instruction.getPhysicalSource1().getValue() + instruction.getPhysicalSource2().getValue());
 				else
-					instruction.setMemoryAddress(instruction.getSrc1().getValue() + instruction.getLiteral());
+					instruction.setMemoryAddress(instruction.getPhysicalSource1().getValue() + instruction.getLiteral());
 				break;
 			}
+		Simulator.isALU1FUAvailable=true;
 		return instruction;
 	}
 }
