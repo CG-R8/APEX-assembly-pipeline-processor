@@ -108,7 +108,7 @@ public class Queue
 		// Read operands from Physical register file
 		// if (!instruction.isSourceValid()) {
 		// instruction = Rename.readSourceOperandsFromPRF(instruction);
-		// }
+		// } 
 
 		if (isIQAvailable())
 		{
