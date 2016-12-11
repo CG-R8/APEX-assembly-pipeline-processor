@@ -6,7 +6,7 @@ public class Queue
 
 	private static int iQMAX = 20;
 	private static int lSQMAX = 4;
-	private static ArrayList<Instruction> isssueQueue = new ArrayList<Instruction>(iQMAX);
+	public static ArrayList<Instruction> isssueQueue = new ArrayList<Instruction>(iQMAX);
 	private static ArrayList<Instruction> loadStoreQueue = new ArrayList<Instruction>(lSQMAX);
 
 	// Check if Issue queue is available (Issue can contain up to 8
@@ -30,7 +30,6 @@ public class Queue
 	public static void markAllJustaddedFalse()
 	{
 		int size = isssueQueue.size();
-		System.out.println("Size of Issue Que : "+size);
 		while(size!=0)
 		{
 			isssueQueue.get(size-1).setJustAddedToQ(false);
@@ -113,8 +112,6 @@ public class Queue
 		if (isIQAvailable())
 		{
 			System.out.println("In the add Q function" + " " + instruction.getContent());
-
-			// Check if there is empty slot in IQ
 			isssueQueue.add(instruction);
 			addedToQueue = true;
 		}

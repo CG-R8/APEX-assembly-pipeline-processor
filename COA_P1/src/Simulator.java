@@ -3,7 +3,9 @@
  *
  */
 import java.util.Map;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map.Entry;
 import java.util.Scanner;
 import java.util.stream.Stream;
@@ -20,6 +22,7 @@ public class Simulator
 	static Map<String, Instruction> stages;
 	static Map<String, Instruction> latches;
 	static Map<String, Integer> registerFile;
+	public static ArrayList<Instruction> tempIssueQ_dispatchable = new ArrayList<Instruction>(5);
 
 	static Map<String, Integer> freePhysicalRegister;
 	static Map<String, Integer> URF = new HashMap<String, Integer>(16);;
@@ -31,7 +34,7 @@ public class Simulator
 	private static boolean isFetchInstruction;
 	public static boolean isALU1FUAvailable;
 	public static Map<String, Integer> physicalRegisterFile = new HashMap<String, Integer>(16);
-	private static boolean isMULFUAvailable=true;
+	private static boolean isMULFUAvailable = true;
 	private static int mulCounter = 1;
 
 	private static void fetchStage()
@@ -60,9 +63,6 @@ public class Simulator
 	{
 
 		moveInstruction("D1", "F");
-
-		if (stages.get("D1") != null)
-			System.out.println("--------Decode 1----------> " + stages.get("D1").getContent());
 	}
 
 	private static void decodeStage2()
@@ -84,31 +84,20 @@ public class Simulator
 		}
 		// Remove read if valid bit is set as 1
 		// Rename.retireROBEntry();
-		if (stages.get("D2") != null)
-			System.out.println("--------Decode 2----------> " + stages.get("D2").getContent());
 
 	}
-
-	
 
 	private static void dispatch()
 	{
 
 		/*
-		 * Check issue Q is full HOLD the current instuction 
-		 * 
-		 * If IQ not Full send
-		 * renamed instruction. To IQ tail 
-		 * 
-		 * Send the renamed instruction to
-		 * ROB.tail 
-		 * Set that entries ROB valid bit 0 
-		 * 
-		 * Check if already there is
+		 * Check issue Q is full HOLD the current instuction If IQ not Full send
+		 * renamed instruction. To IQ tail Send the renamed instruction to
+		 * ROB.tail Set that entries ROB valid bit 0 Check if already there is
 		 * instruction which is in Decode but not in IQ Push suh instruction
 		 * into IQ and then take new instruction in Decode
 		 */
-		
+
 		if (isALU1FUAvailable)
 		{
 			Instruction instruction = Queue.pullIQInstruction("ALU");
@@ -117,36 +106,58 @@ public class Simulator
 			{
 				instruction.setJustAddedToQ(false);
 				isFetchInstruction = Queue.addToQueue(instruction);
+				
+				//add NOP is we are not able to fetch instruction from Q
+				latches.put("I", new Instruction());
+				moveInstruction("E", "I");
 			} else
 			{
 				if (instruction.isqDispatchable())
 				{
 					if (!instruction.isNOP())
+					{
 						execute1(instruction);
-				} else 
+					}
+				} else
 				{
+					//add NOP is we are not able to fetch instruction from Q
+					latches.put("I", new Instruction());
+					moveInstruction("E", "I");
+					
 					if (!instruction.isNOP())
-					isFetchInstruction = Queue.addToQueue(instruction);
+						isFetchInstruction = Queue.addToQueue(instruction);
 				}
+
 
 			}
 		}
-				if (isMULFUAvailable)
+		if (isMULFUAvailable)
+		{
+			Instruction instruction = Queue.pullIQInstruction("MUL");
+			if (instruction.isJustAddedToQ())
+			{
+				instruction.setJustAddedToQ(false);
+				isFetchInstruction = Queue.addToQueue(instruction);
+			} else
+			{
+
+				if (instruction.isqDispatchable())
 				{
-					Instruction  instruction=Queue.pullIQInstruction("MUL");
-					if(instruction.isJustAddedToQ())
+					if (!instruction.isNOP())
 					{
-						instruction.setJustAddedToQ(false);
-						isFetchInstruction = Queue.addToQueue(instruction);
-					}else
-					{
-					if(!instruction.isNOP())
+						stages.put("MUL", instruction);
 						multiplication();
 					}
-				}else if(mulCounter>1)
+				} else
 				{
-					multiplication();
+					if (!instruction.isNOP())
+						isFetchInstruction = Queue.addToQueue(instruction);
 				}
+			}
+		} else if (mulCounter > 1)
+		{
+			multiplication();
+		}
 	}
 
 	private static void execute1(Instruction instruction)
@@ -158,51 +169,42 @@ public class Simulator
 			latches.put("I", instruction);
 		}
 		moveInstruction("E", "I");
-
-		if (stages.get("E") != null)
-			System.out.println("--------ALU1 ----------> " + stages.get("E").getContent());
 	}
 
-	
-	
-	
-	
 	private static void multiplication()
 	{
 		ExecutionOfOpcode functionUnit = new ExecutionOfOpcode();
-		Instruction instruction= new Instruction();
-		if(mulCounter==1)
+		Instruction instruction = new Instruction();
+		if (mulCounter == 1)
 		{
-			instruction=Queue.pullIQInstruction("MUL");
-			if(!instruction.isNOP())
+			instruction = stages.get("MUL");
+			if (!instruction.isNOP())
 			{
 				instruction = functionUnit.executeInstruction(instruction);
 				stages.put("MUL", instruction);
+				isMULFUAvailable=false;
 			}
 		}
-		if(mulCounter==4)
+		if (mulCounter == 4)
 		{
-			//write result to URF.
-			System.out.println("=====Committing the MUL value===========================================");
-			mulCounter=1;
-			URF.put(stages.get("MUL").getPhysicalDestination().getKey(),stages.get("MUL").getDestination().getValue());
+			if (stages.get("MUL") != null)
+				System.out.println("--------MUL  ----------> " + stages.get("MUL").getContent());
+			mulCounter = 1;
+			URF.put(stages.get("MUL").getPhysicalDestination().getKey(), stages.get("MUL").getDestination().getValue());
 			stages.put("MUL", new Instruction());
+			isMULFUAvailable=true;
 		}
-		if(stages.containsKey("MUL")&& !stages.get("MUL").isNOP())
-		mulCounter++;
+		if (stages.containsKey("MUL") && !stages.get("MUL").isNOP())
+			mulCounter++;
+
 		
-		if (stages.get("MUL") != null)
-			System.out.println("--------MUL  ----------> " + stages.get("MUL").getContent());
 	}
-	
 
 	private static void execute2Stage()
 	{
+
 		if (latches.containsKey("E"))
 		{
-
-			if (latches.get("E") != null)
-				System.out.println("--------ALU 2----------> " + latches.get("E").getContent());
 			if (!latches.get("E").isNOP())
 			{
 				latches.put("E", executeInstruction2Method(latches.get("E")));
@@ -329,13 +331,64 @@ public class Simulator
 				aluResultRegister = instruction.getPhysicalDestination().getKey().toString();
 				URF.put(aluResultRegister, aluResultValue);
 			}
-		
 
 		return instruction;
 	}
 
 	private static void memoryStage()
 	{
+		for (Entry<String, Integer> register : URF.entrySet())
+		{
+			for (Instruction instruction : Queue.retrieveIsssueQueue())
+			{
+				if ((instruction.getPhysicalSource1() != null) && instruction.getPhysicalSource1().getKey().equals(register.getKey()))
+				{
+					instruction.setPhysicalSource1(new RegisgerName_Value<String, Integer>(register.getKey().toString(), register.getValue()));
+					instruction.setSrc1Valid(true);
+					getSourceValues(instruction);
+				}
+			}
+		}
+
+		// take element from tempIssueQ_dispatchable and remove that fom IQ put
+		// again and remove from tempIssueQ_dispatchable
+		boolean gotinstructionflag = false;
+		Iterator<Instruction> tempIQ = tempIssueQ_dispatchable.iterator();
+		Iterator<Instruction> issueQ = Queue.isssueQueue.iterator();
+		while (tempIQ.hasNext())
+		{
+			while (issueQ.hasNext())
+			{
+				if (issueQ.equals(tempIQ))
+				{
+					issueQ.remove();
+					gotinstructionflag = true;
+					break;
+				}
+				issueQ.next();
+			}
+			if (gotinstructionflag)
+			{
+				Queue.isssueQueue.add((Instruction) tempIQ);
+				System.out.println(" ==== " + ((Instruction) tempIQ).getContent());
+				gotinstructionflag = false;
+			}
+			tempIQ.next();
+		}
+
+		for (Entry<String, Integer> register : URF.entrySet())
+		{
+			for (Instruction instruction : Queue.retrieveIsssueQueue())
+			{
+				if ((instruction.getPhysicalSource2() != null) && instruction.getPhysicalSource2().getKey().equals(register.getKey()))
+				{
+					instruction.setPhysicalSource2(new RegisgerName_Value<String, Integer>(register.getKey().toString(), register.getValue()));
+					instruction.setSrc2Valid(true);
+					getSourceValues(instruction);
+				}
+			}
+		}
+
 		if (latches.containsKey("Dly") && !latches.get("Dly").isNOP())
 		{
 			moveInstruction("M", "Dly");
@@ -383,9 +436,7 @@ public class Simulator
 				isComplete = true;
 			}
 		}
-		
-		
-		
+
 	}
 
 	/**
@@ -437,7 +488,7 @@ public class Simulator
 			decodeStage1();
 			decodeStage2();
 			dispatch();
-//			multiplication();
+			// multiplication();
 			// execute1();
 			execute2Stage();
 			branchStage();
@@ -471,6 +522,10 @@ public class Simulator
 			System.out.println("--------Execution1------> " + stages.get("E").getContent());
 		if (stages.get("E2") != null)
 			System.out.println("--------Execution2------> " + stages.get("E2").getContent());
+		
+		if (stages.get("MUL") != null)
+			System.out.println("--------MUL-------> " + stages.get("MUL").getContent());
+		
 		if (stages.get("B1") != null)
 			System.out.println("--------Branch----------> " + stages.get("B1").getContent());
 		if (stages.get("Dly") != null)
@@ -534,8 +589,8 @@ public class Simulator
 			{
 				System.out.println("------------------------------Apex Simulator----------------------------------");
 				System.out.println(" 1 : Initialize\n 2 : Simulate \n 3 : Display\n 4 : Exit");
-//				scanner = new Scanner(System.in);
-//				switch (scanner.nextLine())
+				// scanner = new Scanner(System.in);
+				// switch (scanner.nextLine())
 				switch ("2")
 
 					{
@@ -545,7 +600,7 @@ public class Simulator
 					case "2":
 						Initialize();
 						System.out.print("Please enter no of cycles : ");
-//						Simulate(Integer.parseInt(scanner.nextLine()));
+						// Simulate(Integer.parseInt(scanner.nextLine()));
 						Simulate(30);
 
 						break;
@@ -761,18 +816,20 @@ public class Simulator
 		}
 		return instruction;
 	}
+
 	private static Instruction getSourceValues(Instruction instruction)
 	{
 		RegisgerName_Value<String, Integer> pSrc1 = instruction.getPhysicalSource1();
 		RegisgerName_Value<String, Integer> pSrc2 = instruction.getPhysicalSource2();
 		boolean src1_local_valid = false;
 		boolean src2_local_valid = false;
+		boolean isIssueQHasEntry = false;
 
-		if(pSrc1!=null)
+		if (pSrc1 != null)
 		{
 			for (Entry<String, Integer> entry : URF.entrySet())
 			{
-				if(entry.getKey().equals(pSrc1.getKey()))
+				if (entry.getKey().equals(pSrc1.getKey()))
 				{
 					instruction.setPhysicalSource1(new RegisgerName_Value<String, Integer>(entry.getKey(), entry.getValue()));
 					instruction.setSrc1Valid(true);
@@ -781,11 +838,11 @@ public class Simulator
 				}
 			}
 		}
-		if(pSrc2!=null)
+		if (pSrc2 != null)
 		{
 			for (Entry<String, Integer> entry : URF.entrySet())
 			{
-				if(entry.getKey().equals(pSrc2.getKey()))
+				if (entry.getKey().equals(pSrc2.getKey()))
 				{
 					instruction.setPhysicalSource2(new RegisgerName_Value<String, Integer>(entry.getKey(), entry.getValue()));
 					instruction.setSrc2Valid(true);
@@ -794,19 +851,33 @@ public class Simulator
 				}
 			}
 		}
-		if(pSrc1==null && (pSrc2==null))
+		if (pSrc1 == null && (pSrc2 == null))
 		{
 			instruction.setqDispatchable(true);
-		}else
-		if(("STORE|LOAD|BAL").contains(instruction.getOperation()))
+		} else if (("STORE|LOAD|BAL").contains(instruction.getOperation()))
 		{
 			instruction.setqDispatchable(src1_local_valid);
-		}
-		else
+		} else
 		{
 			instruction.setqDispatchable(src2_local_valid && src1_local_valid);
 		}
-		
+
+		if (instruction.isqDispatchable())
+		{
+			for (Instruction qinstruction : Queue.retrieveIsssueQueue())
+			{
+				if (instruction.equals(qinstruction))
+				{
+					isIssueQHasEntry = true;
+					break;
+				}
+			}
+			if (isIssueQHasEntry)
+			{
+				tempIssueQ_dispatchable.add(instruction);
+			}
+		}
+
 		return instruction;
 	}
 
