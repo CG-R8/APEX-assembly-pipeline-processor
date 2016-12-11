@@ -27,15 +27,17 @@ public class Queue
 	{
 		return isssueQueue.size() == 0;
 	}
+
 	public static void markAllJustaddedFalse()
 	{
 		int size = isssueQueue.size();
-		while(size!=0)
+		while (size != 0)
 		{
-			isssueQueue.get(size-1).setJustAddedToQ(false);
+			isssueQueue.get(size - 1).setJustAddedToQ(false);
 			size--;
-		}	
+		}
 	}
+
 	public static Instruction pullIQInstruction(String fuType)
 	{
 		String instrOpertaionType = null;
@@ -107,7 +109,7 @@ public class Queue
 		// Read operands from Physical register file
 		// if (!instruction.isSourceValid()) {
 		// instruction = Rename.readSourceOperandsFromPRF(instruction);
-		// } 
+		// }
 
 		if (isIQAvailable())
 		{

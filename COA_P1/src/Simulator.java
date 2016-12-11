@@ -24,6 +24,11 @@ public class Simulator
 	static Map<String, Integer> registerFile;
 	public static ArrayList<Instruction> tempIssueQ_dispatchable = new ArrayList<Instruction>(5);
 
+	public static ArrayList<ROBEntry> ROBuffer;
+	static int ROBHead = 0;
+	static int ROBtail = -1;
+	private static Map<String, String> RRAT;
+
 	static Map<String, Integer> freePhysicalRegister;
 	static Map<String, Integer> URF = new HashMap<String, Integer>(16);;
 	static int specialRegister;
@@ -80,6 +85,27 @@ public class Simulator
 				instruction = getSourceValues(instruction);
 				instruction.setJustAddedToQ(true);
 				isFetchInstruction = Queue.addToQueue(instruction);
+
+				// add ROB entry for each instruction dispatched to IQ.
+				ROBEntry newEntry = new ROBEntry();
+
+				String Operation = instruction.getOperation();
+				if (instruction.getPhysicalDestination() == null)
+				{
+					instruction.setPhysicalDestination(new RegisgerName_Value<String, Integer>("Z", -1));
+				} else
+				{
+					String archidest = instruction.getDestination().getKey();
+					newEntry.setArchiRegister(archidest);
+
+				}
+				String renamedDest = instruction.getPhysicalDestination().getKey();
+				newEntry.setPhysicalDest(renamedDest);
+				newEntry.setInstructionOperation(Operation);
+
+				ROBtail++;
+				ROBuffer.add(ROBtail, newEntry);
+
 			}
 		}
 		// Remove read if valid bit is set as 1
@@ -106,8 +132,8 @@ public class Simulator
 			{
 				instruction.setJustAddedToQ(false);
 				isFetchInstruction = Queue.addToQueue(instruction);
-				
-				//add NOP is we are not able to fetch instruction from Q
+
+				// add NOP is we are not able to fetch instruction from Q
 				latches.put("I", new Instruction());
 				moveInstruction("E", "I");
 			} else
@@ -120,14 +146,13 @@ public class Simulator
 					}
 				} else
 				{
-					//add NOP is we are not able to fetch instruction from Q
+					// add NOP is we are not able to fetch instruction from Q
 					latches.put("I", new Instruction());
 					moveInstruction("E", "I");
-					
+
 					if (!instruction.isNOP())
 						isFetchInstruction = Queue.addToQueue(instruction);
 				}
-
 
 			}
 		}
@@ -182,7 +207,7 @@ public class Simulator
 			{
 				instruction = functionUnit.executeInstruction(instruction);
 				stages.put("MUL", instruction);
-				isMULFUAvailable=false;
+				isMULFUAvailable = false;
 			}
 		}
 		if (mulCounter == 4)
@@ -190,14 +215,27 @@ public class Simulator
 			if (stages.get("MUL") != null)
 				System.out.println("--------MUL  ----------> " + stages.get("MUL").getContent());
 			mulCounter = 1;
-			URF.put(stages.get("MUL").getPhysicalDestination().getKey(), stages.get("MUL").getDestination().getValue());
+			Instruction computedMUL = stages.get("MUL");
+			// URF.put(stages.get("MUL").getPhysicalDestination().getKey(),
+			// stages.get("MUL").getDestination().getValue());
+			Integer aluResultValue = computedMUL.getDestination().getValue();
+			String aluResultRegister = computedMUL.getPhysicalDestination().getKey().toString();
+			URF.put(aluResultRegister, aluResultValue);
+			for (ROBEntry entry : ROBuffer)
+			{
+				System.out.println(" || " + entry.getPhysicalDest() + " || " + entry.getInstructionOperation());
+				if (entry.getPhysicalDest().equals(aluResultRegister))
+				{
+					entry.setReadyBit(1);
+				}
+			}
+
 			stages.put("MUL", new Instruction());
-			isMULFUAvailable=true;
+			isMULFUAvailable = true;
 		}
 		if (stages.containsKey("MUL") && !stages.get("MUL").isNOP())
 			mulCounter++;
 
-		
 	}
 
 	private static void execute2Stage()
@@ -330,9 +368,61 @@ public class Simulator
 				aluResultValue = instruction.getDestination().getValue();
 				aluResultRegister = instruction.getPhysicalDestination().getKey().toString();
 				URF.put(aluResultRegister, aluResultValue);
+				for (ROBEntry entry : ROBuffer)
+				{
+					System.out.println(" || " + entry.getPhysicalDest() + " || " + entry.getInstructionOperation());
+					if (entry.getPhysicalDest().equals(aluResultRegister))
+					{
+						entry.setReadyBit(1);
+					}
+				}
+
 			}
 
 		return instruction;
+	}
+
+	private static void Commit()
+	{
+
+		if (ROBuffer.size() > 0)
+		{
+			ROBEntry robEntry = new ROBEntry();
+			robEntry = ROBuffer.get(ROBHead);
+
+			if (robEntry.getReadyBit() == 1)
+			{
+				ROBuffer.remove(0);
+				ROBtail--;
+
+				if (robEntry.getPhysicalDest() != null && robEntry.getArchiRegister() != null)
+				{
+					String physicalReg = robEntry.getPhysicalDest();
+					String archiReg = robEntry.getArchiRegister();
+
+					if (RRAT.isEmpty())
+					{
+						System.out.println(" First Entry in RRAT ");
+						RRAT.put(archiReg, physicalReg);
+
+					} else
+					{
+						if (RRAT.containsKey(archiReg))
+						{
+							String freePhysicalReg = RRAT.get(archiReg);
+							RRAT.put(archiReg, physicalReg);
+							physicalRegisterFile.put(freePhysicalReg, 0);
+
+						} else
+						{
+							RRAT.put(archiReg, physicalReg);
+						}
+					}
+				}
+			}
+
+		}
+
 	}
 
 	private static void memoryStage()
@@ -419,6 +509,8 @@ public class Simulator
 
 			// Check instruction in W is one of the control flow instr or not
 			// and not STORE
+			Commit();
+
 			if (!controlFlowInstruction.contains(stages.get("W").getOperation()) && !stages.get("W").getOperation().equals(TypesOfOperations.STORE))
 			{
 				RegisgerName_Value<String, Integer> destinationReg = stages.get("W").getDestination();
@@ -453,6 +545,8 @@ public class Simulator
 		registerFile = new HashMap<String, Integer>();
 		stages = new HashMap<String, Instruction>();
 		latches = new HashMap<String, Instruction>();
+		ROBuffer = new ArrayList<ROBEntry>(40);
+		RRAT = new HashMap<String, String>(16);
 		specialRegister = 0;
 		isComplete = false;
 		isValidSource = true;
@@ -479,7 +573,7 @@ public class Simulator
 	{
 		for (int i = 1; i <= noCycles; i++)
 		{
-			if (i == 23)
+			if (i == 25)
 			{
 				System.out.println("");
 			}
@@ -522,10 +616,10 @@ public class Simulator
 			System.out.println("--------Execution1------> " + stages.get("E").getContent());
 		if (stages.get("E2") != null)
 			System.out.println("--------Execution2------> " + stages.get("E2").getContent());
-		
+
 		if (stages.get("MUL") != null)
 			System.out.println("--------MUL-------> " + stages.get("MUL").getContent());
-		
+
 		if (stages.get("B1") != null)
 			System.out.println("--------Branch----------> " + stages.get("B1").getContent());
 		if (stages.get("Dly") != null)
@@ -550,12 +644,27 @@ public class Simulator
 		{
 			System.out.print(register.getKey() + " : " + register.getValue() + "|\t|");
 		}
+		System.out.println("\nPhysicalRegisterFile: ");
+		for (Entry<String, Integer> register : physicalRegisterFile.entrySet())
+		{
+			System.out.print(register.getKey() + " : " + register.getValue() + "|\t|");
+		}
 		// System.out.println("Special Register X:" + specialRegister);
 		// System.out.println("\n0 to 99 Memory Address Details: ");
 		System.out.println("\nIssue Queue: ");
 		for (Instruction instruction : Queue.retrieveIsssueQueue())
 		{
 			System.out.println(instruction.getContent());
+		}
+		System.out.println("\nR O B: ");
+		for (ROBEntry entry : ROBuffer)
+		{
+			System.out.println(entry.getInstructionOperation() + " " + entry.getPhysicalDest() + " " + entry.getReadyBit());
+		}
+		System.out.println("\nR - R A T : ");
+		for (Entry<String, String> register : RRAT.entrySet())
+		{
+			System.out.print(register.getKey() + " : " + register.getValue() + "|\t|");
 		}
 
 		// for (int i = 0; i < 100; i++)

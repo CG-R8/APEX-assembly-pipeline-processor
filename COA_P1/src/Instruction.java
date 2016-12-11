@@ -16,27 +16,24 @@ public class Instruction
 	private Integer instrMemAddress;
 	private String instrContent;
 	private boolean isInstrNOP;
-	
+
 	private boolean sourceValid;
-	
+
 	private RegisgerName_Value<String, Integer> physicalDestination;
 	private RegisgerName_Value<String, Integer> physicalSource1;
 	private RegisgerName_Value<String, Integer> physicalSource2;
-	
+
 	public boolean justAddedToQ;
-	
+
 	private boolean src1Valid;
 	private boolean src2Valid;
 	private boolean qDispatchable;
-
 
 	private int destinationRobIndex;
 	private int source1RobIndex;
 	private int source2RobIndex;
 	private int renamedSlot;
 
-	
-	
 	public Instruction()
 	{
 		this.instrContent = "NOP";
@@ -51,8 +48,7 @@ public class Instruction
 	 * @param literal
 	 * @param content
 	 */
-	public Instruction(String operation, RegisgerName_Value<String, Integer> destination, RegisgerName_Value<String, Integer> src1,
-			RegisgerName_Value<String, Integer> src2, Integer literal, String content)
+	public Instruction(String operation, RegisgerName_Value<String, Integer> destination, RegisgerName_Value<String, Integer> src1, RegisgerName_Value<String, Integer> src2, Integer literal, String content)
 	{
 		this.instrOperation = operation;
 		this.instrdestination = destination;
@@ -122,14 +118,16 @@ public class Instruction
 	{
 		return this.isInstrNOP;
 	}
-	
+
 	// Returns true if source 1 and 2 are valid
-	public boolean isSourceValid() {
+	public boolean isSourceValid()
+	{
 		return this.sourceValid;
 	}
 
 	// Set if source 1 and 2 are valid
-	public void isSourceValid(boolean value) {
+	public void isSourceValid(boolean value)
+	{
 		sourceValid = value;
 	}
 
@@ -171,7 +169,7 @@ public class Instruction
 
 	public void setPhysicalDestination(int i)
 	{
-		
+
 		this.physicalDestination = new RegisgerName_Value<String, Integer>(this.getPhysicalDestination().getKey(), i);
 	}
 
@@ -195,8 +193,6 @@ public class Instruction
 		this.src1Valid = src1Valid;
 	}
 
-
-	
 	public boolean isSrc2Valid()
 	{
 		return src2Valid;
@@ -216,8 +212,5 @@ public class Instruction
 	{
 		this.qDispatchable = qDispatchable;
 	}
-	
-	
-	
-	
+
 }

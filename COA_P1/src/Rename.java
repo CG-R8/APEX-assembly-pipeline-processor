@@ -145,6 +145,7 @@ public class Rename
 					renamedParameter = freephysicalRegister;
 					Simulator.physicalRegisterFile.put(freephysicalRegister, 1);
 					counter++;
+					System.out.println();
 
 				}
 			} else
